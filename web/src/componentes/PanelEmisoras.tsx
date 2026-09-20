@@ -1,91 +1,159 @@
 import type { EstadoReproduccion } from '../audio/controlador';
-import type { Destino, Emisora } from '../tipos';
-import type { EstadoEmisoras } from './Explorador';
+import type { Emisora, Lugar } from '../tipos';
+import type { Filtro } from '../util/filtros';
+import { navegar } from '../util/ruta';
+import { ListaEmisoras } from './ListaEmisoras';
 
-interface Props {
-  destino: Destino | null;
-  emisoras: EstadoEmisoras;
-  emisoraActual: Emisora | null;
-  estadoAudio: EstadoReproduccion;
-  alElegir: (emisora: Emisora) => void;
-  alReintentar: () => void;
+export interface ContenidoPanel {
+  titulo: string;
+  subtitulo: string | null;
+  nota: string | null;
+  emisoras: Emisora[];
+  /** Ciudades del índice propio relacionadas con la búsqueda. */
+  lugaresSugeridos: Lugar[];
+  conLugar: boolean;
+  vacio: string | null;
+  hayMas: boolean;
 }
 
-export function PanelEmisoras({ destino, emisoras, emisoraActual, estadoAudio, alElegir, alReintentar }: Props) {
+interface Props {
+  estado: 'cargando' | 'listo' | 'error';
+  mensajeError: string | null;
+  contenido: ContenidoPanel;
+  filtros: Filtro[];
+  etiqueta: string | null;
+  emisoraActual: Emisora | null;
+  estadoAudio: EstadoReproduccion;
+  hayFavoritas: boolean;
+  avisoAlmacen: string | null;
+  cargandoMas: boolean;
+  esFavorita: (id: string) => boolean;
+  alElegirEtiqueta: (etiqueta: string | null) => void;
+  alElegir: (emisora: Emisora) => void;
+  alAlternarFavorita: (emisora: Emisora) => void;
+  alVerMas: () => void;
+  alReintentar: () => void;
+  acciones?: React.ReactNode;
+}
+
+export function PanelEmisoras({
+  estado,
+  mensajeError,
+  contenido,
+  filtros,
+  etiqueta,
+  emisoraActual,
+  estadoAudio,
+  hayFavoritas,
+  avisoAlmacen,
+  cargandoMas,
+  esFavorita,
+  alElegirEtiqueta,
+  alElegir,
+  alAlternarFavorita,
+  alVerMas,
+  alReintentar,
+  acciones,
+}: Props) {
   return (
     <aside className="panel" aria-labelledby="panel-titulo">
       <div className="panel__cabecera">
         <h2 id="panel-titulo" className="panel__titulo">
-          {destino ? destino.nombre : 'Destino'}
+          {contenido.titulo}
         </h2>
-        {destino && <p className="panel__pais">{destino.pais}</p>}
+        {contenido.subtitulo && <p className="panel__pais">{contenido.subtitulo}</p>}
       </div>
 
-      {emisoras.estado === 'cargando' && (
+      {estado === 'cargando' && (
         <p className="panel__estado" role="status">
           Buscando emisoras…
         </p>
       )}
 
-      {emisoras.estado === 'error' && (
+      {estado === 'error' && (
         <div className="panel__estado" role="alert">
-          <p>{emisoras.mensaje}</p>
+          <p>{mensajeError}</p>
           <button type="button" className="boton boton--secundario" onClick={alReintentar}>
             Reintentar
           </button>
         </div>
       )}
 
-      {emisoras.estado === 'listo' && emisoras.datos.emisoras.length === 0 && (
-        <p className="panel__estado">Todavía no tenemos emisoras verificadas para este destino.</p>
-      )}
-
-      {emisoras.estado === 'listo' && emisoras.datos.emisoras.length > 0 && (
+      {estado === 'listo' && (
         <>
-          <ul className="emisoras">
-            {emisoras.datos.emisoras.map((e) => {
-              const esActual = emisoraActual?.id === e.id;
-              const etiquetaEstado = esActual ? textoEstado(estadoAudio) : null;
-              return (
-                <li key={e.id}>
+          {contenido.lugaresSugeridos.length > 0 && (
+            <nav className="sugerencias" aria-label="Ciudades que encajan con la búsqueda">
+              <p className="sugerencias__titulo">¿Buscabas un lugar?</p>
+              <div className="sugerencias__fichas">
+                {contenido.lugaresSugeridos.map((lugar) => (
                   <button
+                    key={lugar.id}
                     type="button"
-                    className={`emisora ${esActual ? 'emisora--actual' : ''}`}
-                    aria-pressed={esActual}
-                    onClick={() => alElegir(e)}
+                    className="ficha ficha--pequena"
+                    onClick={() => navegar({ tipo: 'lugar', id: lugar.id })}
                   >
-                    <span className="emisora__nombre">{e.nombre}</span>
-                    <span className="emisora__detalle">
-                      {[e.codec, e.bitrate > 0 ? `${e.bitrate} kbps` : null, e.etiquetas.slice(0, 3).join(' · ')]
-                        .filter(Boolean)
-                        .join(' · ')}
-                    </span>
-                    {etiquetaEstado && <span className="emisora__estado">{etiquetaEstado}</span>}
+                    {lugar.nombre}
+                    <span className="ficha__pais">{lugar.pais}</span>
                   </button>
-                </li>
-              );
-            })}
-          </ul>
-          <p className="panel__nota">
-            {emisoras.datos.origen === 'copia-local' ? emisoras.datos.nota : 'Selección pequeña de esta primera versión.'}
-          </p>
+                ))}
+              </div>
+            </nav>
+          )}
+
+          {filtros.length > 0 && (
+            <div className="filtros" role="group" aria-label="Filtrar por estilo">
+              <button
+                type="button"
+                className="ficha ficha--filtro"
+                aria-pressed={etiqueta === null}
+                onClick={() => alElegirEtiqueta(null)}
+              >
+                Todo
+              </button>
+              {filtros.map((f) => (
+                <button
+                  key={f.etiqueta}
+                  type="button"
+                  className="ficha ficha--filtro"
+                  aria-pressed={etiqueta === f.etiqueta}
+                  onClick={() => alElegirEtiqueta(etiqueta === f.etiqueta ? null : f.etiqueta)}
+                >
+                  {f.etiqueta} <span className="ficha__cuenta">{f.cuantas}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {contenido.emisoras.length === 0 ? (
+            <div className="panel__estado">
+              <p>{contenido.vacio ?? 'No hay emisoras que mostrar aquí.'}</p>
+              {acciones}
+            </div>
+          ) : (
+            <>
+              <ListaEmisoras
+                emisoras={contenido.emisoras}
+                emisoraActual={emisoraActual}
+                estadoAudio={estadoAudio}
+                hayFavoritas={hayFavoritas}
+                esFavorita={esFavorita}
+                conLugar={contenido.conLugar}
+                alElegir={alElegir}
+                alAlternarFavorita={alAlternarFavorita}
+              />
+              {contenido.hayMas && (
+                <button type="button" className="boton boton--secundario panel__mas" onClick={alVerMas} disabled={cargandoMas}>
+                  {cargandoMas ? 'Buscando…' : 'Ver más emisoras'}
+                </button>
+              )}
+              {acciones && <div className="panel__acciones">{acciones}</div>}
+            </>
+          )}
+
+          {contenido.nota && <p className="panel__nota">{contenido.nota}</p>}
+          {avisoAlmacen && <p className="panel__nota">{avisoAlmacen}</p>}
         </>
       )}
     </aside>
   );
-}
-
-function textoEstado(estado: EstadoReproduccion): string | null {
-  switch (estado) {
-    case 'loading':
-      return 'Conectando…';
-    case 'playing':
-      return 'En directo';
-    case 'paused':
-      return 'En pausa';
-    case 'error':
-      return 'Sin señal';
-    case 'idle':
-      return null;
-  }
 }

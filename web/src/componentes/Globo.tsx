@@ -4,22 +4,24 @@ import type { MeshPhongMaterial } from 'three';
 import { feature } from 'topojson-client';
 import type { Topology } from 'topojson-specification';
 import tierra from 'world-atlas/land-110m.json';
-import type { Destino, Emisora } from '../tipos';
+import type { Emisora, Lugar } from '../tipos';
 import { prefiereMenosMovimiento } from '../util/entorno';
 
 interface Props {
-  destinos: Destino[];
-  destinoActual: Destino | null;
+  /** Todas las ciudades del índice propio: son los puntos que se pueden abrir. */
+  lugares: Lugar[];
+  lugarEnfocado: Lugar | null;
   emisoras: Emisora[];
-  alElegirDestino: (destino: Destino) => void;
-  alPasarPorDestino: (destino: Destino | null) => void;
+  alElegirLugar: (lugar: Lugar) => void;
+  alPasarPorLugar: (lugar: Lugar | null) => void;
 }
 
 type InstanciaGlobo = GlobeInstance;
 
-interface PuntoDestino {
-  tipo: 'destino';
-  destino: Destino;
+interface PuntoLugar {
+  tipo: 'lugar';
+  lugar: Lugar;
+  enfocado: boolean;
   lat: number;
   lng: number;
 }
@@ -31,7 +33,7 @@ interface PuntoEmisora {
   lng: number;
 }
 
-type Punto = PuntoDestino | PuntoEmisora;
+type Punto = PuntoLugar | PuntoEmisora;
 
 const ALTITUD_DESTINO = 1.6;
 const topologia = tierra as unknown as Topology;
@@ -41,13 +43,15 @@ const poligonos = superficie.type === 'FeatureCollection' ? superficie.features 
 /**
  * Integra Globe.gl con React: una instancia por montaje, limpieza completa al desmontar,
  * pausa del render cuando la pestaña no está visible y respeto de prefers-reduced-motion.
+ * Los puntos son las ciudades del índice propio; las emisoras solo aparecen si el catálogo
+ * da coordenadas para ellas, nunca inventadas a partir del país.
  */
-export function Globo({ destinos, destinoActual, emisoras, alElegirDestino, alPasarPorDestino }: Props) {
+export function Globo({ lugares, lugarEnfocado, emisoras, alElegirLugar, alPasarPorLugar }: Props) {
   const contenedor = useRef<HTMLDivElement>(null);
   const globo = useRef<InstanciaGlobo | null>(null);
-  const callbacks = useRef({ alElegirDestino, alPasarPorDestino });
-  callbacks.current = { alElegirDestino, alPasarPorDestino };
-  const destinoInicial = useRef(destinoActual);
+  const callbacks = useRef({ alElegirLugar, alPasarPorLugar });
+  callbacks.current = { alElegirLugar, alPasarPorLugar };
+  const enfoqueInicial = useRef(lugarEnfocado);
   const primerEnfoque = useRef(true);
 
   useEffect(() => {
@@ -55,7 +59,7 @@ export function Globo({ destinos, destinoActual, emisoras, alElegirDestino, alPa
     if (!el) return;
     const menosMovimiento = prefiereMenosMovimiento();
 
-    // Sin animación de entrada: pisaría el enfoque inicial del destino.
+    // Sin animación de entrada: pisaría el enfoque inicial del lugar.
     const g = new Globe(el, { animateIn: false, rendererConfig: { antialias: true, alpha: true } })
       .backgroundColor('rgba(0,0,0,0)')
       .showAtmosphere(true)
@@ -68,35 +72,29 @@ export function Globo({ destinos, destinoActual, emisoras, alElegirDestino, alPa
       .polygonAltitude(0.004)
       .pointLat((p) => (p as Punto).lat)
       .pointLng((p) => (p as Punto).lng)
-      .pointColor((p) => ((p as Punto).tipo === 'destino' ? '#F2CB57' : '#F5F0E6'))
-      .pointAltitude((p) => ((p as Punto).tipo === 'destino' ? 0.02 : 0.008))
-      .pointRadius((p) => ((p as Punto).tipo === 'destino' ? 0.55 : 0.22))
+      .pointColor((p) => colorDePunto(p as Punto))
+      .pointAltitude((p) => ((p as Punto).tipo === 'lugar' ? 0.02 : 0.008))
+      .pointRadius((p) => radioDePunto(p as Punto))
       .pointsMerge(false)
-      .pointLabel((p) => {
-        const punto = p as Punto;
-        return punto.tipo === 'destino'
-          ? `<div class="globo__etiqueta">${escapar(punto.destino.nombre)}<small>${escapar(punto.destino.pais)}</small></div>`
-          : `<div class="globo__etiqueta">${escapar(punto.emisora.nombre)}<small>según el catálogo</small></div>`;
-      })
+      .pointLabel((p) => etiquetaDePunto(p as Punto))
       .onPointClick((p) => {
         const punto = p as Punto;
-        if (punto.tipo === 'destino') callbacks.current.alElegirDestino(punto.destino);
+        if (punto.tipo === 'lugar') callbacks.current.alElegirLugar(punto.lugar);
       })
       .onPointHover((p) => {
         const punto = p as Punto | null;
-        callbacks.current.alPasarPorDestino(punto && punto.tipo === 'destino' ? punto.destino : null);
+        callbacks.current.alPasarPorLugar(punto && punto.tipo === 'lugar' ? punto.lugar : null);
       })
-      .showPointerCursor((tipo, datos) => tipo === 'label' || (tipo === 'point' && (datos as Punto).tipo === 'destino'))
-      .labelsData(destinos)
-      .labelLat((d) => (d as Destino).coordenadas.lat)
-      .labelLng((d) => (d as Destino).coordenadas.lng)
-      .labelText((d) => (d as Destino).nombre)
+      .showPointerCursor((tipo, datos) => tipo === 'label' || (tipo === 'point' && (datos as Punto).tipo === 'lugar'))
+      .labelLat((d) => (d as Lugar).coordenadas.lat)
+      .labelLng((d) => (d as Lugar).coordenadas.lng)
+      .labelText((d) => (d as Lugar).nombre)
       .labelSize(1.1)
       .labelDotRadius(0)
       .labelColor(() => '#F5F0E6')
       .labelAltitude(0.03)
       .labelResolution(2)
-      .onLabelClick((d) => callbacks.current.alElegirDestino(d as Destino));
+      .onLabelClick((d) => callbacks.current.alElegirLugar(d as Lugar));
 
     const material = g.globeMaterial() as MeshPhongMaterial;
     material.color.set('#1A1E21');
@@ -105,15 +103,19 @@ export function Globo({ destinos, destinoActual, emisoras, alElegirDestino, alPa
 
     g.renderer().setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     const controles = g.controls();
-    // Sin giro automático: el destino elegido debe quedarse a la vista.
+    // Sin giro automático: el lugar elegido debe quedarse a la vista.
     controles.autoRotate = false;
     controles.enableDamping = !menosMovimiento;
     controles.minDistance = 140;
     controles.maxDistance = 600;
 
-    // Enfoque inicial inmediato; los cambios posteriores de destino se animan en su propio efecto.
-    const inicial = destinoInicial.current;
-    if (inicial) g.pointOfView({ lat: inicial.coordenadas.lat, lng: inicial.coordenadas.lng, altitude: ALTITUD_DESTINO }, 0);
+    const inicial = enfoqueInicial.current;
+    g.pointOfView(
+      inicial
+        ? { lat: inicial.coordenadas.lat, lng: inicial.coordenadas.lng, altitude: ALTITUD_DESTINO }
+        : { lat: 20, lng: 0, altitude: 2.4 },
+      0,
+    );
 
     const observador = new ResizeObserver(([entrada]) => {
       if (!entrada) return;
@@ -137,41 +139,69 @@ export function Globo({ destinos, destinoActual, emisoras, alElegirDestino, alPa
       globo.current = null;
       el.replaceChildren();
     };
-    // Los datos se actualizan en efectos separados; la instancia se crea una vez.
+    // Los datos se actualizan en efectos aparte; la instancia se crea una sola vez.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     const g = globo.current;
     if (!g) return;
-    g.labelsData(destinos);
-  }, [destinos]);
+    // Solo se escribe el nombre del lugar abierto: 70 etiquetas a la vez taparían el mundo.
+    g.labelsData(lugarEnfocado ? [lugarEnfocado] : []);
+  }, [lugarEnfocado]);
 
   useEffect(() => {
     const g = globo.current;
     if (!g) return;
     const puntos: Punto[] = [
-      ...destinos.map<PuntoDestino>((d) => ({ tipo: 'destino', destino: d, lat: d.coordenadas.lat, lng: d.coordenadas.lng })),
-      ...emisoras
-        .filter((e) => e.coordenadas !== null)
-        .map<PuntoEmisora>((e) => ({ tipo: 'emisora', emisora: e, lat: e.coordenadas!.lat, lng: e.coordenadas!.lng })),
+      ...lugares.map<PuntoLugar>((lugar) => ({
+        tipo: 'lugar',
+        lugar,
+        enfocado: lugar.id === lugarEnfocado?.id,
+        lat: lugar.coordenadas.lat,
+        lng: lugar.coordenadas.lng,
+      })),
+      ...emisoras.flatMap<PuntoEmisora>((emisora) =>
+        emisora.coordenadas
+          ? [{ tipo: 'emisora', emisora, lat: emisora.coordenadas.lat, lng: emisora.coordenadas.lng }]
+          : [],
+      ),
     ];
     g.pointsData(puntos);
-  }, [destinos, emisoras]);
+  }, [lugares, emisoras, lugarEnfocado]);
 
   useEffect(() => {
     const g = globo.current;
-    if (!g || !destinoActual) return;
-    if (primerEnfoque.current) {
-      // El enfoque inicial ya se aplicó al crear la instancia.
-      primerEnfoque.current = false;
-      return;
-    }
-    const duracion = prefiereMenosMovimiento() ? 0 : 1200;
-    g.pointOfView({ lat: destinoActual.coordenadas.lat, lng: destinoActual.coordenadas.lng, altitude: ALTITUD_DESTINO }, duracion);
-  }, [destinoActual]);
+    if (!g || !lugarEnfocado) return;
+    // El primer lugar suele llegar después de montarse el globo: entonces se coloca de golpe,
+    // sin un viaje largo desde la vista por defecto. Los cambios posteriores sí se animan.
+    const yaColocado = primerEnfoque.current && enfoqueInicial.current?.id === lugarEnfocado.id;
+    const duracion = primerEnfoque.current ? 0 : prefiereMenosMovimiento() ? 0 : 1200;
+    primerEnfoque.current = false;
+    if (yaColocado) return;
+    g.pointOfView(
+      { lat: lugarEnfocado.coordenadas.lat, lng: lugarEnfocado.coordenadas.lng, altitude: ALTITUD_DESTINO },
+      duracion,
+    );
+  }, [lugarEnfocado]);
 
   return <div ref={contenedor} className="globo" aria-hidden="true" />;
+}
+
+function colorDePunto(punto: Punto): string {
+  if (punto.tipo === 'emisora') return '#F5F0E6';
+  return punto.enfocado ? '#F2CB57' : 'rgba(245, 240, 230, 0.55)';
+}
+
+function radioDePunto(punto: Punto): number {
+  if (punto.tipo === 'emisora') return 0.22;
+  return punto.enfocado ? 0.55 : 0.3;
+}
+
+function etiquetaDePunto(punto: Punto): string {
+  return punto.tipo === 'lugar'
+    ? `<div class="globo__etiqueta">${escapar(punto.lugar.nombre)}<small>${escapar(punto.lugar.pais)}</small></div>`
+    : `<div class="globo__etiqueta">${escapar(punto.emisora.nombre)}<small>según el catálogo</small></div>`;
 }
 
 function escapar(texto: string): string {

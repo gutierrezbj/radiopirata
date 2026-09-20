@@ -17,6 +17,7 @@ export interface EstacionRadioBrowser {
   codec: string;
   bitrate: number;
   hls: number;
+  votes?: number;
   geo_lat: number | null;
   geo_long: number | null;
 }
@@ -90,18 +91,17 @@ export class ClienteRadioBrowser {
     return this.servidores;
   }
 
-  /** Rota el primer servidor al final tras un fallo. */
-  private rotar(): void {
-    const primero = this.servidores.shift();
-    if (primero) this.servidores.push(primero);
+  /** Pone delante el servidor que acaba de responder, para empezar por él la próxima vez. */
+  private preferir(host: string): void {
+    if (this.servidores[0] === host) return;
+    this.servidores = [host, ...this.servidores.filter((s) => s !== host)];
   }
 
   private async peticion<T>(ruta: string): Promise<T> {
-    const servidores = await this.listaServidores();
-    const intentos = servidores.length;
+    // Copia del orden actual: varias peticiones a la vez no deben quitarse servidores entre ellas.
+    const servidores = [...(await this.listaServidores())];
     let ultimoError: unknown;
-    for (let intento = 0; intento < intentos; intento++) {
-      const host = servidores[0];
+    for (const host of servidores) {
       const url = `https://${host}${ruta}`;
       const control = new AbortController();
       const temporizador = setTimeout(() => control.abort(), this.opciones.timeoutMs);
@@ -111,10 +111,11 @@ export class ClienteRadioBrowser {
           signal: control.signal,
         });
         if (!respuesta.ok) throw new ErrorRadioBrowser(`HTTP ${respuesta.status} en ${host}`);
-        return (await respuesta.json()) as T;
+        const datos = (await respuesta.json()) as T;
+        this.preferir(host);
+        return datos;
       } catch (e) {
         ultimoError = e;
-        this.rotar();
       } finally {
         clearTimeout(temporizador);
       }
@@ -130,9 +131,18 @@ export class ClienteRadioBrowser {
     return this.peticion<EstacionRadioBrowser[]>(`/json/stations/byuuid?${parametros.toString()}`);
   }
 
-  /** Búsqueda limitada del catálogo, usada solo por los scripts de selección. */
-  async buscar(parametros: Record<string, string>): Promise<EstacionRadioBrowser[]> {
-    const p = new URLSearchParams({ hidebroken: 'true', limit: '50', ...parametros });
+  /**
+   * Búsqueda acotada del catálogo. Los parámetros los compone siempre el servidor a partir de
+   * entrada ya validada; el cliente nunca puede indicar rutas ni hosts.
+   */
+  async buscar(parametros: Record<string, string>, limite = 50): Promise<EstacionRadioBrowser[]> {
+    const p = new URLSearchParams({
+      hidebroken: 'true',
+      order: 'votes',
+      reverse: 'true',
+      limit: String(Math.min(Math.max(limite, 1), 200)),
+      ...parametros,
+    });
     return this.peticion<EstacionRadioBrowser[]>(`/json/stations/search?${p.toString()}`);
   }
 
@@ -143,6 +153,47 @@ export class ClienteRadioBrowser {
   async registrarClic(uuid: string): Promise<void> {
     await this.peticion<unknown>(`/json/url/${encodeURIComponent(uuid)}`);
   }
+}
+
+/**
+ * Formatos que ningún navegador actual reproduce en un elemento de audio. Los que quedan fuera de
+ * esta lista (MP3, AAC, OGG, FLAC, WAV…) se admiten; si alguno falla en un navegador concreto,
+ * el reproductor lo dice con un mensaje claro en vez de callarse.
+ */
+const CODECS_IMPOSIBLES = new Set(['FLV', 'ASF', 'WMA', 'RA', 'RM', 'RTMP', 'DASH']);
+const EXTENSIONES_IMPOSIBLES = ['.m3u8', '.mpd', '.asx', '.asf', '.wma', '.ram', '.flv', '.rm'];
+
+/**
+ * ¿Puede sonar esta señal en el navegador tal y como está montada RadioPirata?
+ * Exigimos HTTPS (la web se sirve por HTTPS y el contenido mixto se bloquea) y descartamos HLS y
+ * los formatos que el navegador no sabe abrir. Preferimos dejar fuera una emisora antes que
+ * ofrecer un botón que falla.
+ */
+export function estacionReproducible(e: EstacionRadioBrowser): boolean {
+  const url = e.url_resolved || e.url;
+  if (!urlDeAudioValida(url) || !url.startsWith('https://')) return false;
+  if (e.hls === 1) return false;
+  if (CODECS_IMPOSIBLES.has((e.codec ?? '').trim().toUpperCase())) return false;
+  const sinConsulta = (url.split('?')[0] ?? '').toLowerCase();
+  return !EXTENSIONES_IMPOSIBLES.some((ext) => sinConsulta.endsWith(ext));
+}
+
+/**
+ * Une varias listas del catálogo y ordena por votos. Quita repetidos por identificador y también
+ * por señal: el catálogo tiene la misma emisora dada de alta varias veces, y en la lista sobra.
+ */
+export function fusionarEstaciones(listas: EstacionRadioBrowser[][], limite: number): EstacionRadioBrowser[] {
+  const porId = new Map<string, EstacionRadioBrowser>();
+  const señalesVistas = new Set<string>();
+  for (const lista of listas) {
+    for (const estacion of lista) {
+      const señal = (estacion.url_resolved || estacion.url).trim().toLowerCase();
+      if (porId.has(estacion.stationuuid) || señalesVistas.has(señal)) continue;
+      porId.set(estacion.stationuuid, estacion);
+      señalesVistas.add(señal);
+    }
+  }
+  return [...porId.values()].sort((a, b) => (b.votes ?? 0) - (a.votes ?? 0)).slice(0, limite);
 }
 
 /** Convierte un registro de Radio Browser a nuestro modelo, descartando URLs no válidas. */

@@ -7,10 +7,11 @@ La música siempre es buena compañía.
 
 ## Estado
 
-**E1 implementada (2026-09-20).** Recorrido completo: inicio → destino (Tokio, Caracas o Lisboa) → lista de emisoras reales → escuchar → seguir explorando sin cortar el audio. Selección pequeña de 11 emisoras verificadas con fecha; evidencia en [docs/VERIFICACION-E1.md](docs/VERIFICACION-E1.md). Sin favoritos, filtros ni búsqueda global todavía (E2). No está publicada (E3).
+**E1 y E2 implementadas (2026-09-20).** Se busca en todo el catálogo por ciudad, país y estilo; hay un índice propio de 72 ciudades con coordenadas fiables, favoritas y recientes en el dispositivo, filtros por estilo y enlaces para compartir una emisora. La selección comprobada a mano de E1 sigue marcada como tal. No está publicada (E3).
 
 - Encargo y arquitectura: [AGENTS.md](AGENTS.md), [docs/ENCARGO.md](docs/ENCARGO.md).
 - Progreso y pendientes: [tasks/todo.md](tasks/todo.md).
+- Evidencia: [docs/VERIFICACION-E1.md](docs/VERIFICACION-E1.md) y [docs/VERIFICACION-E2.md](docs/VERIFICACION-E2.md).
 - Sincronización de la carpeta local: [docs/SINCRONIZACION.md](docs/SINCRONIZACION.md).
 - Repositorio: https://github.com/gutierrezbj/radiopirata · Destino previsto: `radio.jrgblanco.com` (pendiente de configurar).
 
@@ -53,7 +54,7 @@ npm start
 
 Sirve la API y la web compilada desde el mismo origen (http://localhost:3001 por defecto). Necesita `npm run build` antes.
 
-Scripts de la selección de emisoras (necesitan red):
+Scripts de la selección comprobada a mano (necesitan red):
 
 ```bash
 npm run seleccion:generar
@@ -65,26 +66,38 @@ Consulta Radio Browser por UUID y reescribe `server/data/seleccion-e1.json` con 
 npm run seleccion:verificar
 ```
 
-Sondea cada emisora por HTTP con User-Agent de navegador y escribe `docs/VERIFICACION-E1.md`.
+Sondea cada emisora por HTTP con User-Agent de navegador y actualiza `docs/VERIFICACION-E1.md` conservando las notas escritas a mano.
 
 ## Resultados de la última validación (2026-09-20)
 
 | Comprobación | Resultado |
 |---|---|
 | `npm run typecheck` | sin errores (server y web) |
-| `npm test` | 21 pruebas en server, 19 en web, todas en verde |
-| `npm run build` | correcto; el globo (globe.gl + three) va en un trozo aparte de ~2 MB que solo se carga al entrar al explorador |
-| Emisoras accesibles por HTTP | 11 de 11 |
-| Emisoras que reproducen en Chromium | 11 de 11 (1 candidata retirada por no reproducir) |
+| `npm test` | 59 pruebas en server, 54 en web, todas en verde |
+| `npm run build` | correcto; el globo va en un trozo aparte que solo se carga al entrar al explorador |
+| Emisoras comprobadas a mano | 11 de 11 reproducen en Chromium |
+| Recorrido de E2 | búsqueda, filtros, favoritas, recientes, compartir y anterior/siguiente comprobados a mano |
 | Dispositivos | Windows 11 con el navegador integrado de Claude desktop (Chromium), escritorio y emulación móvil 375×812 |
 
-Detalle, limitaciones y lo que no se pudo probar: [docs/VERIFICACION-E1.md](docs/VERIFICACION-E1.md).
+Detalle y limitaciones: [docs/VERIFICACION-E2.md](docs/VERIFICACION-E2.md).
+
+## Qué se puede hacer
+
+- **Buscar** una ciudad, un país o un estilo. El texto se resuelve primero contra el índice propio de ciudades; si no es una ciudad exacta, se busca en el catálogo por nombre, estilo y país a la vez.
+- **Abrir una ciudad** desde el buscador, desde los destinos comprobados o pinchando cualquiera de los 72 puntos del globo.
+- **Filtrar por estilo** dentro de la lista que se está viendo. Solo se ofrecen los estilos que agrupan más de una emisora.
+- **Guardar favoritas y ver recientes**, que se quedan en el navegador del dispositivo.
+- **Compartir una emisora** con un enlace `?emisora=<id>` que abre su ficha.
+- **Pasar a la anterior o la siguiente** de la lista desde la que se eligió lo que suena.
+- **Sorpréndeme**: una ciudad al azar del índice y una emisora al azar de esa ciudad.
 
 ## Estructura
 
 ```
-server/   API Node + Express (TypeScript). Adaptador de Radio Browser, caché acotada, selección E1 con fecha.
-web/      React + TypeScript + Vite. Inicio, explorador con Globe.gl, panel de emisoras y reproductor único.
+server/   API Node + Express (TypeScript). Adaptador de Radio Browser, índice de ciudades,
+          búsqueda, caché acotada y selección comprobada a mano con fecha.
+web/      React + TypeScript + Vite. Inicio, explorador con Globe.gl, panel de emisoras,
+          reproductor único y almacén local de favoritas y recientes.
 docs/     Encargo, sincronización y verificación.
 tasks/    Progreso.
 ```
@@ -92,24 +105,43 @@ tasks/    Progreso.
 Piezas clave:
 
 - `web/src/audio/controlador.ts`: único controlador de audio. Un `HTMLAudioElement` persistente fuera de React; cada selección invalida la anterior por generación, así que en un cambio rápido A → B → C solo C puede quedar activa. Estados `idle`, `loading`, `playing`, `paused`, `error`, con mensajes para autoplay bloqueado, espera excesiva, señal caída, formato no admitido y pérdida de conexión.
-- `server/src/radioBrowser.ts`: descubrimiento de servidores por DNS SRV, User-Agent propio, timeout, cambio de servidor ante fallo y registro de clic solo al empezar a escuchar.
-- `server/src/catalogo.ts`: refresca la selección desde Radio Browser con caché de 15 minutos; si el proveedor falla, sirve la copia local con fecha y lo dice en la respuesta.
-- `server/data/seleccion-e1.json`: copia de la selección inicial generada el 2026-09-20.
+- `web/src/almacen/local.ts`: favoritas y recientes en `localStorage` con esquema versionado. Sanea cada entrada al leerla, descarta lo corrupto, empieza de cero ante otra versión y se marca como no disponible si el navegador no deja guardar.
+- `web/src/util/ruta.ts`: el estado de la aplicación vive en la dirección, así que cualquier vista se puede compartir o recargar.
+- `server/src/lugares.ts` y `server/data/ciudades.json`: índice propio de 72 ciudades, validado al arrancar.
+- `server/src/radioBrowser.ts`: descubrimiento de servidores por DNS SRV, User-Agent propio, timeout, cambio de servidor sin interferir entre peticiones en paralelo y registro de clic solo al empezar a escuchar.
+- `server/src/catalogo.ts`: búsqueda por nombre, estilo y país en paralelo, fusión sin repetidos, paginación en memoria y caché de 15 minutos que nunca guarda un fallo.
+
+## API
+
+| Ruta | Para qué |
+|---|---|
+| `GET /api/destinos` | los pocos destinos con emisoras comprobadas a mano |
+| `GET /api/lugares` | índice propio de ciudades con coordenadas |
+| `GET /api/lugares/:id/emisoras` | emisoras de una ciudad: comprobadas primero, catálogo después |
+| `GET /api/buscar?q=&pagina=&pais=` | búsqueda por nombre, estilo y país; `pais` es el código ISO de dos letras |
+| `GET /api/emisoras/:id` | una emisora, para abrir un enlace compartido |
+| `POST /api/emisoras/:id/clic` | registro de escucha de Radio Browser, solo al empezar a sonar |
+
+El audio nunca pasa por la API: va del servidor de la emisora al navegador.
 
 ## Configuración
 
 Variables documentadas en [.env.example](.env.example): puerto, ruta del build de la web, User-Agent, timeout de Radio Browser y tamaño/vida de la caché. Ningún valor es secreto.
 
-## Decisiones y límites de E1
+## Decisiones y límites
 
 - El audio va directo del servidor de la emisora al navegador; la API nunca lo transporta ni hay proxy.
-- Solo URLs HTTPS con MP3/AAC nativos. Las señales HLS (`.m3u8`) se descartaron en esta selección; se añadirá soporte si hace falta y tras verificarlo por navegador.
-- La ciudad de cada emisora es la que declara Radio Browser (`state`), mostrada tal cual; no se etiqueta por país ni se inventan coordenadas. Las emisoras sin coordenadas aparecen en la lista sin punto en el globo.
-- Los destinos tienen coordenadas propias del índice (centro aproximado de la ciudad) y sirven para enfocar el globo, no para situar cada emisora.
+- Solo se ofrecen emisoras que pueden sonar: HTTPS, sin HLS y sin formatos que ningún navegador abre (FLV, WMA, ASF, RTMP, DASH). Eso deja fuera emisoras conocidas y es a propósito, para no enseñar un botón que falla.
+- Las emisoras del catálogo no están comprobadas una a una. Si una falla, el reproductor lo dice y se puede reintentar o pasar a la siguiente.
+- La ubicación de cada emisora es la que declara Radio Browser, mostrada tal cual. Su campo es una región, así que una ciudad puede traer emisoras de su entorno; la nota del panel lo advierte.
+- Una ciudad sin emisoras no se rellena con emisoras de su país: el país no prueba la ciudad.
+- Las coordenadas del índice propio son el centro aproximado de cada ciudad y solo sirven para enfocar el globo.
+- Favoritas y recientes no salen del dispositivo: no hay cuentas ni sincronización.
 - Pausar una radio en directo no guarda nada: al reanudar se reconecta la señal y la interfaz lo dice.
-- El estado «En directo» aparece solo tras reproducción efectiva (evento `playing`).
-- Sin WebGL, se muestran la lista y el reproductor sin globo. Con `prefers-reduced-motion`, sin animación de cámara ni transiciones.
-- Los mockups aprobados siguen sin versionarse; E1 se implementó a partir de la especificación visual del encargo.
+- El estado «En directo» aparece solo tras reproducción efectiva.
+- Sin WebGL se muestran la lista y el reproductor sin globo. Con `prefers-reduced-motion`, sin animación de cámara ni transiciones.
+- Una búsqueda devuelve como mucho 120 emisoras, de 24 en 24.
+- Los mockups aprobados siguen sin versionarse; la interfaz se hizo a partir de la especificación visual del encargo.
 
 ## Documentación técnica
 

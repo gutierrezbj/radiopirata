@@ -1,8 +1,8 @@
 import express, { type Express } from 'express';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
-import type { Catalogo } from './catalogo.js';
-import { esIdDestino, esUuid } from './validacion.js';
+import { MAX_RESULTADOS, POR_PAGINA, type Catalogo } from './catalogo.js';
+import { codigoPaisValido, consultaValida, esIdDestino, esUuid, MAX_CONSULTA, paginaValida } from './validacion.js';
 
 export interface OpcionesApp {
   catalogo: Catalogo;
@@ -10,19 +10,24 @@ export interface OpcionesApp {
   webDist?: string | undefined;
 }
 
+const MAX_PAGINAS = Math.ceil(MAX_RESULTADOS / POR_PAGINA);
+
 export function crearApp({ catalogo, webDist }: OpcionesApp): Express {
   const app = express();
   app.disable('x-powered-by');
 
   app.get('/api/salud', (_req, res) => {
-    res.json({ ok: true, destinos: catalogo.destinos().length });
+    res.json({ ok: true, destinos: catalogo.destinos().length, lugares: catalogo.lugares().length });
   });
+
+  // --- Selección verificada (E1) ---
 
   app.get('/api/destinos', (_req, res) => {
     res.setHeader('Cache-Control', 'public, max-age=300');
     res.json({
       destinos: catalogo.destinos(),
-      nota: 'Primera versión: la búsqueda se limita a Tokio, Caracas y Lisboa y a una selección pequeña de emisoras verificadas.',
+      verificadasEl: catalogo.generadaEl,
+      nota: 'Destinos con emisoras comprobadas a mano. El buscador llega a todo el catálogo.',
     });
   });
 
@@ -40,6 +45,84 @@ export function crearApp({ catalogo, webDist }: OpcionesApp): Express {
       }
       res.setHeader('Cache-Control', 'public, max-age=60');
       res.json(respuesta);
+    } catch {
+      res.status(502).json({ error: 'No se ha podido consultar el catálogo.' });
+    }
+  });
+
+  // --- Índice propio de lugares ---
+
+  app.get('/api/lugares', (_req, res) => {
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.json({
+      lugares: catalogo.lugares(),
+      nota: 'Índice propio de ciudades. Las coordenadas enfocan el globo; no son la ubicación de cada emisora.',
+    });
+  });
+
+  app.get('/api/lugares/:id/emisoras', async (req, res) => {
+    const { id } = req.params;
+    if (!esIdDestino(id)) {
+      res.status(400).json({ error: 'Identificador de lugar no válido.' });
+      return;
+    }
+    try {
+      const respuesta = await catalogo.emisorasDeLugar(id);
+      if (!respuesta) {
+        res.status(404).json({ error: 'Ese lugar no está en nuestro índice de ciudades.' });
+        return;
+      }
+      res.setHeader('Cache-Control', 'public, max-age=60');
+      res.json(respuesta);
+    } catch {
+      res.status(502).json({ error: 'No se ha podido consultar el catálogo.' });
+    }
+  });
+
+  // --- Búsqueda ---
+
+  app.get('/api/buscar', async (req, res) => {
+    const consulta = consultaValida(req.query['q']);
+    if (consulta === null) {
+      res.status(400).json({ error: `Escribe entre 2 y ${MAX_CONSULTA} caracteres para buscar.` });
+      return;
+    }
+    const pagina = paginaValida(req.query['pagina'], MAX_PAGINAS);
+    if (pagina === null) {
+      res.status(400).json({ error: `La página debe ser un número entre 1 y ${MAX_PAGINAS}.` });
+      return;
+    }
+    const brutoPais = req.query['pais'];
+    const codigoPais = codigoPaisValido(brutoPais);
+    if (brutoPais !== undefined && brutoPais !== '' && codigoPais === null) {
+      res.status(400).json({ error: 'El país debe ser un código de dos letras.' });
+      return;
+    }
+    try {
+      const respuesta = await catalogo.buscar(consulta, pagina, codigoPais ?? undefined);
+      res.setHeader('Cache-Control', 'public, max-age=60');
+      res.json(respuesta);
+    } catch {
+      res.status(502).json({ error: 'El catálogo no ha respondido. Inténtalo otra vez en un momento.' });
+    }
+  });
+
+  // --- Emisoras ---
+
+  app.get('/api/emisoras/:id', async (req, res) => {
+    const { id } = req.params;
+    if (!esUuid(id)) {
+      res.status(400).json({ error: 'Identificador de emisora no válido.' });
+      return;
+    }
+    try {
+      const emisora = await catalogo.emisora(id);
+      if (!emisora) {
+        res.status(404).json({ error: 'Esa emisora ya no está disponible o no se puede reproducir aquí.' });
+        return;
+      }
+      res.setHeader('Cache-Control', 'public, max-age=300');
+      res.json({ emisora });
     } catch {
       res.status(502).json({ error: 'No se ha podido consultar el catálogo.' });
     }

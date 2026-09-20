@@ -1,58 +1,71 @@
 import { useCallback, useEffect, useState } from 'react';
-import { obtenerDestinos } from './api/cliente';
+import { obtenerDestinos, obtenerLugares } from './api/cliente';
+import { useAudio } from './audio/useAudio';
 import { Explorador } from './componentes/Explorador';
 import { Inicio } from './componentes/Inicio';
 import { Reproductor } from './componentes/Reproductor';
-import { useAudio } from './audio/useAudio';
-import type { Destino } from './tipos';
+import type { Destino, Lugar } from './tipos';
+import { lugarAlAzar } from './util/lugares';
+import { navegar, useRuta } from './util/ruta';
 
-type Vista = { nombre: 'inicio' } | { nombre: 'explorador'; destinoId: string; sorpresa: boolean };
-
-export interface EstadoDestinos {
+export interface EstadoIndice {
   estado: 'cargando' | 'listo' | 'error';
+  /** Índice propio de ciudades con coordenadas fiables. */
+  lugares: Lugar[];
+  /** Los pocos destinos con emisoras comprobadas a mano. */
   destinos: Destino[];
-  nota: string;
   error: string | null;
 }
 
 export function App() {
-  const [vista, setVista] = useState<Vista>({ nombre: 'inicio' });
-  const [destinos, setDestinos] = useState<EstadoDestinos>({ estado: 'cargando', destinos: [], nota: '', error: null });
+  const ruta = useRuta();
+  const [indice, setIndice] = useState<EstadoIndice>({ estado: 'cargando', lugares: [], destinos: [], error: null });
   const [intento, setIntento] = useState(0);
+  const [sorpresa, setSorpresa] = useState(false);
   const audioEstado = useAudio();
 
   useEffect(() => {
     const control = new AbortController();
-    setDestinos((d) => ({ ...d, estado: 'cargando', error: null }));
-    obtenerDestinos(control.signal)
-      .then((r) => setDestinos({ estado: 'listo', destinos: r.destinos, nota: r.nota, error: null }))
+    setIndice((i) => ({ ...i, estado: 'cargando', error: null }));
+    Promise.all([obtenerLugares(control.signal), obtenerDestinos(control.signal)])
+      .then(([lugares, destinos]) => {
+        if (control.signal.aborted) return;
+        setIndice({ estado: 'listo', lugares: lugares.lugares, destinos: destinos.destinos, error: null });
+      })
       .catch((e: unknown) => {
         if (control.signal.aborted) return;
-        setDestinos({ estado: 'error', destinos: [], nota: '', error: e instanceof Error ? e.message : 'Error desconocido' });
+        setIndice({
+          estado: 'error',
+          lugares: [],
+          destinos: [],
+          error: e instanceof Error ? e.message : 'No se ha podido cargar el índice de lugares.',
+        });
       });
     return () => control.abort();
   }, [intento]);
 
-  const irADestino = useCallback((destinoId: string, sorpresa = false) => {
-    setVista({ nombre: 'explorador', destinoId, sorpresa });
-  }, []);
+  /** Un lugar al azar del índice y, al llegar su lista, una emisora al azar. */
+  const sorprender = useCallback(() => {
+    const lugar = lugarAlAzar(indice.lugares);
+    if (!lugar) return;
+    setSorpresa(true);
+    navegar({ tipo: 'lugar', id: lugar.id });
+  }, [indice.lugares]);
 
-  const volverAlInicio = useCallback(() => setVista({ nombre: 'inicio' }), []);
-
-  // El reproductor se muestra en cuanto hay una emisora seleccionada, también al volver al inicio.
+  // El reproductor se mantiene mientras haya algo elegido, también al volver al inicio.
   const hayReproductor = audioEstado.emisora !== null;
 
   return (
     <div className={`app ${hayReproductor ? 'app--con-reproductor' : ''}`}>
-      {vista.nombre === 'inicio' ? (
-        <Inicio destinos={destinos} alElegir={irADestino} alReintentar={() => setIntento((n) => n + 1)} />
+      {ruta.tipo === 'inicio' ? (
+        <Inicio indice={indice} alReintentar={() => setIntento((n) => n + 1)} alSorprender={sorprender} />
       ) : (
         <Explorador
-          destinos={destinos.destinos}
-          destinoId={vista.destinoId}
-          sorpresa={vista.sorpresa}
-          alCambiarDestino={(id) => irADestino(id)}
-          alVolver={volverAlInicio}
+          ruta={ruta}
+          indice={indice}
+          sorpresa={sorpresa}
+          alConsumirSorpresa={() => setSorpresa(false)}
+          alSorprender={sorprender}
         />
       )}
       {hayReproductor && <Reproductor />}

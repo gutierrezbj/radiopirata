@@ -1,42 +1,18 @@
-import { useId, useState, type FormEvent } from 'react';
-import type { EstadoDestinos } from '../App';
-import { destinoAlAzar, resolverDestino } from '../util/busqueda';
-import { IconoRadio } from './IconoRadio';
+import { useAlmacen } from '../almacen/useAlmacen';
+import type { EstadoIndice } from '../App';
+import { navegar } from '../util/ruta';
+import { Buscador } from './Buscador';
+import { IconoRadio } from './Iconos';
 
 interface Props {
-  destinos: EstadoDestinos;
-  alElegir: (destinoId: string, sorpresa?: boolean) => void;
+  indice: EstadoIndice;
   alReintentar: () => void;
+  alSorprender: () => void;
 }
 
-export function Inicio({ destinos, alElegir, alReintentar }: Props) {
-  const [texto, setTexto] = useState('');
-  const [aviso, setAviso] = useState<string | null>(null);
-  const idBuscador = useId();
-  const idAviso = useId();
-  const listos = destinos.estado === 'listo';
-  const nombres = destinos.destinos.map((d) => d.nombre);
-
-  function enviar(evento: FormEvent) {
-    evento.preventDefault();
-    if (!listos) return;
-    const destino = resolverDestino(texto, destinos.destinos);
-    if (!destino) {
-      setAviso(
-        texto.trim().length === 0
-          ? `Escribe un destino o elige uno: ${nombres.join(', ')}.`
-          : `Todavía no llegamos a «${texto.trim()}». En esta primera versión puedes escuchar ${enumerar(nombres)}.`,
-      );
-      return;
-    }
-    setAviso(null);
-    alElegir(destino.id);
-  }
-
-  function sorprender() {
-    const destino = destinoAlAzar(destinos.destinos);
-    if (destino) alElegir(destino.id, true);
-  }
+export function Inicio({ indice, alReintentar, alSorprender }: Props) {
+  const { favoritas, recientes, disponible } = useAlmacen();
+  const listo = indice.estado === 'listo';
 
   return (
     <main className="inicio">
@@ -45,75 +21,58 @@ export function Inicio({ destinos, alElegir, alReintentar }: Props) {
           <IconoRadio />
           <span className="marca__texto">RadioPirata</span>
         </span>
+        {disponible && (
+          <nav className="inicio__atajos" aria-label="Lo tuyo">
+            {recientes.length > 0 && (
+              <button type="button" className="enlace" onClick={() => navegar({ tipo: 'recientes' })}>
+                Recientes
+              </button>
+            )}
+            <button type="button" className="enlace" onClick={() => navegar({ tipo: 'favoritas' })}>
+              Mis favoritas{favoritas.length > 0 ? ` (${favoritas.length})` : ''}
+            </button>
+          </nav>
+        )}
       </header>
 
       <section className="inicio__centro">
         <h1 className="inicio__pregunta">¿Dónde escuchamos hoy?</h1>
         <p className="inicio__subtitulo">La música siempre es buena compañía.</p>
 
-        <form className="buscador" onSubmit={enviar} role="search" aria-describedby={aviso ? idAviso : undefined}>
-          <label className="visualmente-oculto" htmlFor={idBuscador}>
-            Destino
-          </label>
-          <input
-            id={idBuscador}
-            className="buscador__campo"
-            type="text"
-            inputMode="search"
-            autoComplete="off"
-            enterKeyHint="go"
-            placeholder={listos ? 'Tokio, Caracas o Lisboa' : 'Cargando destinos…'}
-            value={texto}
-            maxLength={60}
-            disabled={!listos}
-            onChange={(e) => {
-              setTexto(e.target.value);
-              if (aviso) setAviso(null);
-            }}
-          />
-          <button className="boton boton--principal" type="submit" disabled={!listos}>
-            Explorar
-          </button>
-        </form>
+        <Buscador lugares={indice.lugares} listo={listo} />
 
-        {aviso && (
-          <p id={idAviso} className="aviso" role="status">
-            {aviso}
-          </p>
-        )}
-
-        {destinos.estado === 'error' && (
+        {indice.estado === 'error' && (
           <p className="aviso aviso--error" role="alert">
-            {destinos.error}{' '}
+            {indice.error}{' '}
             <button type="button" className="enlace" onClick={alReintentar}>
               Reintentar
             </button>
           </p>
         )}
 
-        {listos && (
-          <div className="inicio__destinos" aria-label="Destinos disponibles">
-            {destinos.destinos.map((d) => (
-              <button key={d.id} type="button" className="ficha" onClick={() => alElegir(d.id)}>
+        {listo && indice.destinos.length > 0 && (
+          <div className="inicio__destinos" aria-label="Destinos comprobados a mano">
+            {indice.destinos.map((d) => (
+              <button key={d.id} type="button" className="ficha" onClick={() => navegar({ tipo: 'lugar', id: d.id })}>
                 {d.nombre}
               </button>
             ))}
           </div>
         )}
 
-        <button type="button" className="boton boton--secundario inicio__sorpresa" onClick={sorprender} disabled={!listos}>
+        <button type="button" className="boton boton--secundario inicio__sorpresa" onClick={alSorprender} disabled={!listo}>
           Sorpréndeme
         </button>
 
-        {listos && <p className="inicio__nota">{destinos.nota}</p>}
+        {listo && (
+          <p className="inicio__nota">
+            Busca cualquier ciudad, país o estilo del catálogo. {indice.lugares.length} ciudades con coordenadas propias y una
+            selección comprobada a mano en Tokio, Caracas y Lisboa.
+          </p>
+        )}
       </section>
 
       <div className="horizonte" aria-hidden="true" />
     </main>
   );
-}
-
-function enumerar(nombres: string[]): string {
-  if (nombres.length <= 1) return nombres.join('');
-  return `${nombres.slice(0, -1).join(', ')} y ${nombres[nombres.length - 1]}`;
 }

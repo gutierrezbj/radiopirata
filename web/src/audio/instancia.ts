@@ -1,3 +1,4 @@
+import { almacen } from '../almacen/local';
 import { registrarClic } from '../api/cliente';
 import { lugarDeEmisora } from '../util/lugar';
 import { ControladorAudio } from './controlador';
@@ -11,7 +12,9 @@ elemento.preload = 'none';
 
 export const audio = new ControladorAudio(elemento, {
   alEmpezar: (emisora) => {
+    // Solo cuando suena de verdad: ni al navegar ni al elegir sin llegar a sonar.
     registrarClic(emisora.id);
+    almacen.registrarReciente(emisora);
     if ('mediaSession' in navigator) {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: emisora.nombre,

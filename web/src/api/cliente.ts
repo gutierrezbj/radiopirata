@@ -1,4 +1,4 @@
-import type { RespuestaDestinos, RespuestaEmisoras } from '../tipos';
+import type { Emisora, RespuestaBusqueda, RespuestaDestinos, RespuestaLugar, RespuestaLugares } from '../tipos';
 
 export class ErrorApi extends Error {
   constructor(
@@ -38,8 +38,27 @@ export function obtenerDestinos(signal?: AbortSignal): Promise<RespuestaDestinos
   return pedir<RespuestaDestinos>('/api/destinos', signal);
 }
 
-export function obtenerEmisoras(destinoId: string, signal?: AbortSignal): Promise<RespuestaEmisoras> {
-  return pedir<RespuestaEmisoras>(`/api/destinos/${encodeURIComponent(destinoId)}/emisoras`, signal);
+export function obtenerLugares(signal?: AbortSignal): Promise<RespuestaLugares> {
+  return pedir<RespuestaLugares>('/api/lugares', signal);
+}
+
+export function obtenerEmisorasDeLugar(lugarId: string, signal?: AbortSignal): Promise<RespuestaLugar> {
+  return pedir<RespuestaLugar>(`/api/lugares/${encodeURIComponent(lugarId)}/emisoras`, signal);
+}
+
+export function buscar(
+  consulta: string,
+  pagina = 1,
+  pais?: string | undefined,
+  signal?: AbortSignal,
+): Promise<RespuestaBusqueda> {
+  const p = new URLSearchParams({ q: consulta, pagina: String(pagina) });
+  if (pais) p.set('pais', pais);
+  return pedir<RespuestaBusqueda>(`/api/buscar?${p.toString()}`, signal);
+}
+
+export function obtenerEmisora(id: string, signal?: AbortSignal): Promise<{ emisora: Emisora }> {
+  return pedir<{ emisora: Emisora }>(`/api/emisoras/${encodeURIComponent(id)}`, signal);
 }
 
 /** Registra el inicio de una escucha. Se lanza y se olvida: nunca afecta a la reproducción. */
