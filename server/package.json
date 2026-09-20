@@ -1,0 +1,26 @@
+{
+  "name": "@radiopirata/server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.scripts.json",
+    "test": "vitest run",
+    "start": "node dist/index.js",
+    "seleccion:generar": "tsx scripts/generar-seleccion.ts",
+    "seleccion:verificar": "tsx scripts/verificar-seleccion.ts"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.15.0",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.1"
+  }
+}

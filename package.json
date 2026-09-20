@@ -1,0 +1,25 @@
+{
+  "name": "radiopirata",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Explorar emisoras reales del mundo y escucharlas con pocos pasos.",
+  "workspaces": [
+    "server",
+    "web"
+  ],
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "concurrently -n api,web -c yellow,cyan \"npm run dev -w server\" \"npm run dev -w web\"",
+    "build": "npm run build -w web && npm run build -w server",
+    "typecheck": "npm run typecheck -w server && npm run typecheck -w web",
+    "test": "npm run test -w server && npm run test -w web",
+    "start": "npm run start -w server",
+    "seleccion:generar": "npm run seleccion:generar -w server",
+    "seleccion:verificar": "npm run seleccion:verificar -w server"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.5"
+  }
+}

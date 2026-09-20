@@ -1,0 +1,269 @@
+{
+  "version": 1,
+  "generadaEl": "2026-09-20T20:36:17.304Z",
+  "fuente": "Radio Browser (https://www.radio-browser.info), consulta /json/stations/byuuid",
+  "destinos": [
+    {
+      "id": "tokio",
+      "nombre": "Tokio",
+      "pais": "Japón",
+      "alias": [
+        "tokyo",
+        "tokio",
+        "東京",
+        "japon",
+        "japón",
+        "japan"
+      ],
+      "coordenadas": {
+        "lat": 35.6762,
+        "lng": 139.6503
+      }
+    },
+    {
+      "id": "caracas",
+      "nombre": "Caracas",
+      "pais": "Venezuela",
+      "alias": [
+        "caracas",
+        "venezuela"
+      ],
+      "coordenadas": {
+        "lat": 10.4806,
+        "lng": -66.9036
+      }
+    },
+    {
+      "id": "lisboa",
+      "nombre": "Lisboa",
+      "pais": "Portugal",
+      "alias": [
+        "lisboa",
+        "lisbon",
+        "lisbonne",
+        "portugal"
+      ],
+      "coordenadas": {
+        "lat": 38.7223,
+        "lng": -9.1393
+      }
+    }
+  ],
+  "emisoras": [
+    {
+      "id": "fad42bb6-2865-4854-94a7-96152e881800",
+      "nombre": "FM世田谷",
+      "destinoId": "tokio",
+      "pais": "Japan",
+      "codigoPais": "JP",
+      "idioma": "japanese",
+      "etiquetas": [
+        "83.4",
+        "full service",
+        "music"
+      ],
+      "url": "https://fmsetagaya834.out.airtime.pro/fmsetagaya834_a",
+      "web": "https://fmsetagaya.com/",
+      "codec": "MP3",
+      "bitrate": 128,
+      "coordenadas": null,
+      "ubicacionSegunCatalogo": "tokyo"
+    },
+    {
+      "id": "fdffc27f-a096-4be8-b3bf-2c51a943a1d1",
+      "nombre": "Gotanno FM 89.2",
+      "destinoId": "tokio",
+      "pais": "Japan",
+      "codigoPais": "JP",
+      "idioma": "japanese",
+      "etiquetas": [
+        "indie pop",
+        "jpop"
+      ],
+      "url": "https://radio.gotanno.love/;",
+      "web": "https://stcat.com/",
+      "codec": "MP3",
+      "bitrate": 128,
+      "coordenadas": {
+        "lat": 35.765196631213904,
+        "lng": 139.80937242507937
+      },
+      "ubicacionSegunCatalogo": "Tokyo"
+    },
+    {
+      "id": "5a4eb5bc-7fbd-43fb-a6a4-cc4517ce6ac4",
+      "nombre": "J1 HITS",
+      "destinoId": "tokio",
+      "pais": "Japan",
+      "codigoPais": "JP",
+      "idioma": "",
+      "etiquetas": [],
+      "url": "https://jenny.torontocast.com:2000/stream/J1HITS?_=184325",
+      "web": "https://www.j1fm.tokyo/",
+      "codec": "MP3",
+      "bitrate": 128,
+      "coordenadas": null,
+      "ubicacionSegunCatalogo": "tokyo"
+    },
+    {
+      "id": "b75a5dcc-b4e2-470b-965b-2fdfb5240bc0",
+      "nombre": "Alba Ciudad 96.3 FM",
+      "destinoId": "caracas",
+      "pais": "Bolivarian Republic Of Venezuela",
+      "codigoPais": "VE",
+      "idioma": "spanish",
+      "etiquetas": [
+        "cultural",
+        "entretenimiento",
+        "government",
+        "noticias",
+        "radio hablada",
+        "variedad"
+      ],
+      "url": "https://envivo.albaciudad.org/albaciudad.mp3",
+      "web": "https://albaciudad.org/",
+      "codec": "MP3",
+      "bitrate": 128,
+      "coordenadas": null,
+      "ubicacionSegunCatalogo": "Caracas"
+    },
+    {
+      "id": "a70922c7-45ea-4c6f-9e64-fd4ceffd1762",
+      "nombre": "La Mega 107.3",
+      "destinoId": "caracas",
+      "pais": "Bolivarian Republic Of Venezuela",
+      "codigoPais": "VE",
+      "idioma": "spanish",
+      "etiquetas": [],
+      "url": "https://acp4.lorini.net:2050/stream",
+      "web": "https://mundour.com/live-mega/",
+      "codec": "MP3",
+      "bitrate": 128,
+      "coordenadas": null,
+      "ubicacionSegunCatalogo": "Caracas"
+    },
+    {
+      "id": "8f2b2fe8-ba3d-4d0c-a758-aa729bc230d0",
+      "nombre": "KYS FM",
+      "destinoId": "caracas",
+      "pais": "Bolivarian Republic Of Venezuela",
+      "codigoPais": "VE",
+      "idioma": "español - latinoamerica",
+      "etiquetas": [
+        "adult contemporary"
+      ],
+      "url": "https://server6.globalhostla.com:9068/stream",
+      "web": "http://kysfm.com/",
+      "codec": "MP3",
+      "bitrate": 160,
+      "coordenadas": {
+        "lat": 10.482752402640465,
+        "lng": -66.84213459491731
+      },
+      "ubicacionSegunCatalogo": "Caracas"
+    },
+    {
+      "id": "d9313b88-1eca-49f6-9d53-d240fdb46528",
+      "nombre": "Estereo 88.7 FM",
+      "destinoId": "caracas",
+      "pais": "Bolivarian Republic Of Venezuela",
+      "codigoPais": "VE",
+      "idioma": "#spanish",
+      "etiquetas": [
+        "cumbia",
+        "merengue",
+        "salsa"
+      ],
+      "url": "https://stream.zeno.fm/3e2keb1e7tzuv",
+      "web": "https://www.fiesta106.com.ve/",
+      "codec": "AAC",
+      "bitrate": 0,
+      "coordenadas": {
+        "lat": 10.505500937420962,
+        "lng": -66.91032698331189
+      },
+      "ubicacionSegunCatalogo": "Caracas"
+    },
+    {
+      "id": "cc461784-3150-4a34-81c5-2116fe024740",
+      "nombre": "TSF Rádio Notícias",
+      "destinoId": "lisboa",
+      "pais": "Portugal",
+      "codigoPais": "PT",
+      "idioma": "portuguese,português  brasil",
+      "etiquetas": [
+        "desporto",
+        "futebol",
+        "notícias",
+        "portugal",
+        "talk"
+      ],
+      "url": "https://directo.tsf.pt/tsfdirecto.mp3",
+      "web": "https://www.tsf.pt/",
+      "codec": "MP3",
+      "bitrate": 128,
+      "coordenadas": {
+        "lat": 38.73940977968836,
+        "lng": -9.065093994140629
+      },
+      "ubicacionSegunCatalogo": "Lisboa"
+    },
+    {
+      "id": "342f46c4-b48b-4813-b0d3-27b6e33f3a41",
+      "nombre": "SmoothFM",
+      "destinoId": "lisboa",
+      "pais": "Portugal",
+      "codigoPais": "PT",
+      "idioma": "portuguese",
+      "etiquetas": [],
+      "url": "https://stream-icy.bauermedia.pt/smooth.aac",
+      "web": "https://smoothfm.pt/",
+      "codec": "AAC",
+      "bitrate": 127,
+      "coordenadas": {
+        "lat": 38.74123075381228,
+        "lng": -9.141998291015629
+      },
+      "ubicacionSegunCatalogo": "Lisboa"
+    },
+    {
+      "id": "7bc1f66f-412d-484b-82eb-b7b1c4575faa",
+      "nombre": "M80 Rádio – 80s",
+      "destinoId": "lisboa",
+      "pais": "Portugal",
+      "codigoPais": "PT",
+      "idioma": "portuguese",
+      "etiquetas": [
+        "80s",
+        "pop",
+        "romantic"
+      ],
+      "url": "https://stream-icy.bauermedia.pt/m8080.aac",
+      "web": "https://m80.iol.pt/",
+      "codec": "AAC",
+      "bitrate": 127,
+      "coordenadas": {
+        "lat": 38.70908932739828,
+        "lng": -9.151954650878908
+      },
+      "ubicacionSegunCatalogo": "Lisbon"
+    },
+    {
+      "id": "c0682eee-a97d-4fbe-b970-dea2ffb18ef0",
+      "nombre": "Rádio Observador",
+      "destinoId": "lisboa",
+      "pais": "Portugal",
+      "codigoPais": "PT",
+      "idioma": "portuguese",
+      "etiquetas": [
+        "news"
+      ],
+      "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/OBSERVADORAAC.aac?dist=web-popup&devicename=aac",
+      "web": "https://observador.pt/radio/player/",
+      "codec": "AAC+",
+      "bitrate": 96,
+      "coordenadas": null,
+      "ubicacionSegunCatalogo": "Lisboa"
+    }
+  ]
+}
