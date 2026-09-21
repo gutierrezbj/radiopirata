@@ -43,7 +43,7 @@ Idea de JuanCho: los relojes de láminas que caían una detrás de otra. Se pusi
 - Con «reducir movimiento» activado en el sistema, el dígito cambia sin caída.
 - Para lectores de pantalla, el bloque es un grupo con una frase entera: «Allí son las 07:04, por la mañana. Aquí son las 13:04.» Las láminas van ocultas.
 - Comprobado con el build de producción: Caracas 07:04 y aquí 13:04 en escritorio y en móvil emulado; Tokio 20:04 «por la noche». Ocho láminas por par de relojes, como toca.
-- Van dentro de un recuadro amarillo, el acento del tema, como el frontal de una radio de antes. Contraste medido: las etiquetas oscuras sobre el amarillo dan 7,4:1 y las láminas negras 12,2:1.
+- Van dentro de un marco fino amarillo, el acento del tema, sobre el fondo normal. La primera versión rellenó el recuadro de amarillo entero y JuanCho lo tumbó con razón: demasiado.
 - **No comprobado**: la caída en sí no se ha visto fotograma a fotograma; se ve el resultado final. Y solo en Chromium.
 
 ## Tarjeta al compartir
