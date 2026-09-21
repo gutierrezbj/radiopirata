@@ -70,7 +70,8 @@ El norte lo puso JuanCho: la radio local de casa para quien vive fuera. Ver `doc
 - [x] Dominio `radiopirata.jrgblanco.com` en la tabla de la Sección 7 del Catálogo, como reservado en Servidor 2 (pasar a activo al desplegar).
 - [x] Fase 5 (2026-09-21, «dale play» de JuanCho): clonado en `/opt/apps/radiopirata`, imagen construida, contenedor `radiopirata-web` sano en 127.0.0.1:3240, nada en 0.0.0.0, vhost nginx en :80, entrada en healthcheck.sh, registro en SA99. Evidencia en `docs/VERIFICACION-DESPLIEGUE.md`.
 - [x] DNS: JuanCho creó el registro A **`radiopirata`** → 187.77.71.102 (TTL 300). Resuelve. El dominio pasa a ser `radiopirata.jrgblanco.com` y así se ha renombrado en todo el repo.
-- [ ] `server_name` del vhost al nombre real, certbot, bloque 443, `HSTS: "1"` y QA. **Bloqueado:** el modo automático deniega cambios de dominio y certificado en el servidor.
+- [x] HTTPS: JuanCho ejecutó nginx + Certbot (el modo automático lo deniega); certificado hasta el 20 dic 2026, HSTS activado y contenedor recreado.
+- [x] QA en el dominio real: redirección, salud, cabeceras, tarjetas por ruta y recorrido Caracas → Lisboa sin cortar el audio.
 - [x] Fase 7: fila del Servidor 2 en el Catálogo, dominio en la Sección 7, tabla del Manifiesto, checklist y página del proyecto actualizados en Notion.
 - [ ] Ver en el log del healthcheck una pasada con `radiopirata-web` (el log solo resume alertas; hasta ahora `alerts=0`).
 - [x] SA99 completo: documento de Mongo con el dominio real y `RadioPirata` añadido a `SEED_SERVERS` en `service.py`. No es otro proyecto (corrección de JuanCho).
@@ -85,7 +86,7 @@ El norte lo puso JuanCho: la radio local de casa para quien vive fuera. Ver `doc
 - [x] Preparar despliegue: Dockerfile, unidad de systemd, configuración de nginx y `docs/DESPLIEGUE.md` con DNS y HTTPS.
 - [ ] Probar en Firefox y Safari, y en un teléfono de verdad.
 - [x] Confirmar alojamiento: **Servidor 2** (decisión de JuanCho, 2026-09-21).
-- [ ] Apuntar `radiopirata.jrgblanco.com` (DNS, JuanCho) y pedir el certificado (después).
+- [x] `radiopirata.jrgblanco.com` en marcha con certificado de Let's Encrypt (21 sep 2026).
 - [x] Publicar cuando lo indique el usuario: desplegada en el Servidor 2 el 2026-09-21; visible desde fuera cuando exista el DNS.
 
 ### Arreglado durante E3

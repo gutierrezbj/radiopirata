@@ -32,12 +32,27 @@ El nginx compartido del VPS aplica `gzip on` a todos los vhosts; la app además 
 ## Lo que falta, y de quién es
 
 - **DNS: hecho por JuanCho el 21 sep 2026.** Registro **A** `radiopirata` → `187.77.71.102`, TTL 300, en el panel de Hostinger. Resuelve desde fuera y desde el propio VPS. El nombre elegido es `radiopirata.jrgblanco.com`, no `radio.jrgblanco.com`: la documentación y el vhost se renombraron para seguirlo.
-- **Certificado.** `certbot --nginx -d radiopirata.jrgblanco.com`, activar el bloque 443 y poner `HSTS: "1"` en el compose. Pendiente: el modo automático del agente bloquea los cambios de dominio y certificado en el servidor, hace falta permiso explícito de JuanCho o hacerlo él.
+- **Certificado: hecho.** JuanCho ejecutó el paso de nginx y Certbot el 21 sep 2026 (el modo automático del agente deniega los cambios de dominio y certificado). Certificado de Let's Encrypt para `radiopirata.jrgblanco.com`, válido hasta el 20 dic 2026, con renovación automática programada. Después se activó `HSTS: "1"` en el compose y se recreó el contenedor.
 - **SA99, hecho del todo.** JuanCho corrigió que SA99 no es otro proyecto: lo desplegado tiene que verse allí con su contenedor y su URL. Además del documento de Mongo, `RadioPirata` está ahora en `SEED_SERVERS` (`backend/app/modules/infra/service.py`, comprobado que el fichero sigue compilando) para los despliegues desde cero, y el dominio corregido al nombre real. Es el décimo proyecto del Servidor 2 en el panel.
 - **Catálogo y Manifiesto** (Fase 7): la fila del Servidor 2 ya está en el Catálogo; el estado del dominio se actualizará al tener DNS y certificado.
-- **QA en el dominio real**, después del certificado, y la alerta de prueba del healthcheck en Telegram.
+- **Alerta de prueba del healthcheck en Telegram**: no se ha forzado.
+
+## QA en el dominio real (21 sep 2026, navegador integrado)
+
+| Comprobación | Resultado |
+|---|---|
+| `http://` | 301 a `https://` |
+| `https://.../api/salud` | `{"ok":true,"destinos":3,"lugares":72}` |
+| Cabecera HSTS | `max-age=31536000; includeSubDomains` |
+| Política de contenidos y `X-Frame-Options` | presentes en la respuesta pública |
+| Tarjeta por ruta | `?lugar=caracas` da «Caracas, Venezuela · RadioPirata»; `?noticias=VE` da «Noticias de Venezuela» |
+| Recorrido | inicio → Caracas → Alba Ciudad 96.3 FM en directo → buscar Lisboa: **el audio de Caracas no se corta** y el reproductor sigue mostrando la emisora |
+| Relojes | Caracas 17:40 y aquí 23:40, cada uno en su marco |
+
+Señal de las emisoras de Caracas probada desde fuera el mismo día: responden Alba Ciudad 96.3, La Mega 107.3, KYS FM y Radio María; no responden Estéreo 88.7 ni TODAY 104.1 (ambas AAC). El catálogo las lista igualmente y el reproductor avisa cuando una no abre.
 
 ## Lo que no se ha comprobado
 
 - El log del healthcheck (`/var/log/srs-healthcheck.log`) solo resume cada pasada con `alerts=N`; no lista los servicios sanos. Las pasadas posteriores a añadir la entrada dan `alerts=0`, así que `radiopirata-web` no se ha reportado caído, pero no hay una línea que diga explícitamente que está UP. Memoria del contenedor en reposo: 28 MB.
-- No se ha abierto la app en un navegador contra el servidor. El vhost sigue respondiendo al nombre viejo `radio.jrgblanco.com`; hasta renombrar `server_name` al nombre real, una petición pública cae en el vhost por defecto del VPS.
+- Sin captura de audio: «suena» sigue significando evento `playing` del navegador.
+- Solo Chromium en Windows. Falta Firefox, Safari y un teléfono de verdad contra el dominio real.
