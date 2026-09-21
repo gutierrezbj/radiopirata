@@ -65,6 +65,8 @@ El norte lo puso JuanCho: la radio local de casa para quien vive fuera. Ver `doc
 - [x] Página «Radio Pirata 1.0» en Notion bajo Proyecto Radio → Radio Pirata, con SDD-01..08, subcarpetas y copia del checklist.
 - [x] Offset +240 reservado en el Catálogo (Sección 4); siguiente libre +250.
 - [x] `docker-compose.yml` (127.0.0.1:3240:3001), `CLAUDE.md`, nginx a 3240, `docs/DESPLIEGUE.md` reescrita contra la infra real.
+- [x] Artefactos del Protocolo de Coding Session: `CLAUDE.md` con capa global y de producto, `DESIGN.md`, `tasks/lessons.md`; copia del checklist UX/UI bajo Diseño y página «Lessons Aprendidas» en Notion; entrada v1.5 en el Cuaderno Maestro.
+- [ ] Identity Sprint formal y Distinctiveness Audit (bloquean producción, no el Servidor 2).
 - [ ] Dominio `radio.jrgblanco.com` en la tabla de la Sección 7 del Catálogo (al desplegar).
 - [ ] Fase 5: deploy en Servidor 2, healthcheck.sh, SA99, nginx, certbot, DNS. **Necesita entrar en el servidor.**
 - [ ] Fase 7: tablas del Catálogo y del Manifiesto tras el deploy.
