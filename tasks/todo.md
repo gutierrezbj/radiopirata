@@ -67,7 +67,7 @@ El norte lo puso JuanCho: la radio local de casa para quien vive fuera. Ver `doc
 - [x] `docker-compose.yml` (127.0.0.1:3240:3001), `CLAUDE.md`, nginx a 3240, `docs/DESPLIEGUE.md` reescrita contra la infra real.
 - [x] Artefactos del Protocolo de Coding Session: `CLAUDE.md` con capa global y de producto, `DESIGN.md`, `tasks/lessons.md`; copia del checklist UX/UI bajo Diseño y página «Lessons Aprendidas» en Notion; entrada v1.5 en el Cuaderno Maestro.
 - [ ] Identity Sprint formal y Distinctiveness Audit (bloquean producción, no el Servidor 2).
-- [ ] Dominio `radio.jrgblanco.com` en la tabla de la Sección 7 del Catálogo (al desplegar).
+- [x] Dominio `radio.jrgblanco.com` en la tabla de la Sección 7 del Catálogo, como reservado en Servidor 2 (pasar a activo al desplegar).
 - [ ] Fase 5: deploy en Servidor 2, healthcheck.sh, SA99, nginx, certbot, DNS. **Necesita entrar en el servidor.**
 - [ ] Fase 7: tablas del Catálogo y del Manifiesto tras el deploy.
 
@@ -80,8 +80,8 @@ El norte lo puso JuanCho: la radio local de casa para quien vive fuera. Ver `doc
 - [x] Apagado ordenado del servidor al recibir SIGTERM.
 - [x] Preparar despliegue: Dockerfile, unidad de systemd, configuración de nginx y `docs/DESPLIEGUE.md` con DNS y HTTPS.
 - [ ] Probar en Firefox y Safari, y en un teléfono de verdad.
-- [ ] Confirmar alojamiento. **Decisión de JuanCho.**
-- [ ] Apuntar `radio.jrgblanco.com` y pedir el certificado. **Necesita el alojamiento elegido.**
+- [x] Confirmar alojamiento: **Servidor 2** (decisión de JuanCho, 2026-09-21).
+- [ ] Apuntar `radio.jrgblanco.com` y pedir el certificado. **Necesita entrar en el Servidor 2.**
 - [ ] Publicar cuando lo indique el usuario. **No hecho a propósito.**
 
 ### Arreglado durante E3
