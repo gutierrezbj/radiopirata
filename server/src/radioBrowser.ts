@@ -146,6 +146,11 @@ export class ClienteRadioBrowser {
     return this.peticion<EstacionRadioBrowser[]>(`/json/stations/search?${p.toString()}`);
   }
 
+  /** Países con emisoras, con el recuento que lleva el propio catálogo. */
+  async paises(): Promise<Array<{ name: string; stationcount: number }>> {
+    return this.peticion<Array<{ name: string; stationcount: number }>>('/json/countrycodes');
+  }
+
   /**
    * Registra un clic (inicio de escucha) según el mecanismo documentado de Radio Browser.
    * Solo debe llamarse cuando el usuario empieza a escuchar, nunca al navegar.
@@ -194,6 +199,19 @@ export function fusionarEstaciones(listas: EstacionRadioBrowser[][], limite: num
     }
   }
   return [...porId.values()].sort((a, b) => (b.votes ?? 0) - (a.votes ?? 0)).slice(0, limite);
+}
+
+/**
+ * ¿Es una emisora informativa? Se mira en las etiquetas y en el nombre, en varios idiomas,
+ * porque cada país etiqueta a su manera: «news», «noticias», «notícias», «nachrichten»…
+ */
+const PATRON_ETIQUETAS =
+  /\b(news|noticias?|not[ií]cias?|informativ[oa]s?|informaci[oó]n|information|nachrichten|actualit[ée]s?|notizie|nieuws|nyheter|haber|radio hablada|hablada|talk radio|journal)\b/i;
+/** En el nombre vale la palabra pegada («BandNews», «Notícias») pero se exige más raíz. */
+const PATRON_NOMBRE = /(news|noticia|not[ií]cia|informativ|nachrichten|actualit[ée]|notizie|nieuws|nyheter)/i;
+
+export function esInformativa(e: EstacionRadioBrowser): boolean {
+  return PATRON_ETIQUETAS.test(e.tags ?? '') || PATRON_NOMBRE.test(e.name ?? '');
 }
 
 /** Convierte un registro de Radio Browser a nuestro modelo, descartando URLs no válidas. */

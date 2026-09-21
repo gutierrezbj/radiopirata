@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   aEmisora,
   ClienteRadioBrowser,
+  esInformativa,
   estacionReproducible,
   fusionarEstaciones,
   type EstacionRadioBrowser,
@@ -184,6 +185,19 @@ describe('aEmisora', () => {
     expect(fusion.map((e) => e.stationuuid)).toEqual(['b', 'c', 'a']);
     expect(fusionarEstaciones([[a, b, c]], 2).map((e) => e.stationuuid)).toEqual(['b', 'c']);
     expect(fusionarEstaciones([], 5)).toEqual([]);
+  });
+
+  it('reconoce una emisora informativa por etiqueta o por nombre, en varios idiomas', () => {
+    const con = (name: string, tags: string) => esInformativa({ ...registro, name, tags });
+    expect(con('Cualquiera', 'pop,news')).toBe(true);
+    expect(con('Cualquiera', 'noticias')).toBe(true);
+    expect(con('Cualquiera', 'nachrichten,talk')).toBe(true);
+    expect(con('BandNews FM', '')).toBe(true);
+    expect(con('TSF Rádio Notícias', '')).toBe(true);
+    expect(con('Radio Nacional - Informativa', '')).toBe(true);
+    expect(con('Pop Hits', 'pop,hits')).toBe(false);
+    // «newsom» no es «news» en una etiqueta, y «talk» a secas tampoco es noticias.
+    expect(con('Cualquiera', 'newsom,talk')).toBe(false);
   });
 
   it('también quita la misma señal dada de alta con otro identificador', () => {

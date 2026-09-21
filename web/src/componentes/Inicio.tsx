@@ -8,9 +8,10 @@ interface Props {
   indice: EstadoIndice;
   alReintentar: () => void;
   alSorprender: () => void;
+  alSorprenderDeNoche: () => void;
 }
 
-export function Inicio({ indice, alReintentar, alSorprender }: Props) {
+export function Inicio({ indice, alReintentar, alSorprender, alSorprenderDeNoche }: Props) {
   const { favoritas, recientes, disponible } = useAlmacen();
   const listo = indice.estado === 'listo';
 
@@ -21,18 +22,21 @@ export function Inicio({ indice, alReintentar, alSorprender }: Props) {
           <IconoRadio />
           <span className="marca__texto">RadioPirata</span>
         </span>
-        {disponible && (
-          <nav className="inicio__atajos" aria-label="Lo tuyo">
-            {recientes.length > 0 && (
-              <button type="button" className="enlace" onClick={() => navegar({ tipo: 'recientes' })}>
-                Recientes
-              </button>
-            )}
+        <nav className="inicio__atajos" aria-label="Lo tuyo">
+          <button type="button" className="enlace" onClick={() => navegar({ tipo: 'paises' })}>
+            Noticias
+          </button>
+          {disponible && recientes.length > 0 && (
+            <button type="button" className="enlace" onClick={() => navegar({ tipo: 'recientes' })}>
+              Recientes
+            </button>
+          )}
+          {disponible && (
             <button type="button" className="enlace" onClick={() => navegar({ tipo: 'favoritas' })}>
               Mis favoritas{favoritas.length > 0 ? ` (${favoritas.length})` : ''}
             </button>
-          </nav>
-        )}
+          )}
+        </nav>
       </header>
 
       <section className="inicio__centro">
@@ -60,9 +64,20 @@ export function Inicio({ indice, alReintentar, alSorprender }: Props) {
           </div>
         )}
 
-        <button type="button" className="boton boton--secundario inicio__sorpresa" onClick={alSorprender} disabled={!listo}>
-          Sorpréndeme
-        </button>
+        <div className="inicio__sorpresas">
+          <button type="button" className="boton boton--secundario" onClick={alSorprender} disabled={!listo}>
+            Sorpréndeme
+          </button>
+          <button
+            type="button"
+            className="boton boton--secundario"
+            onClick={alSorprenderDeNoche}
+            disabled={!listo}
+            title="Una ciudad del índice donde ahora mismo es de noche"
+          >
+            Donde ya es de noche
+          </button>
+        </div>
 
         {listo && (
           <p className="inicio__nota">

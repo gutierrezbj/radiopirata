@@ -3,7 +3,7 @@ import type { Lugar } from '../src/tipos';
 import { nombreDeVista, TITULO_BASE, tituloDeRuta } from '../src/util/titulo';
 
 const lugares: Lugar[] = [
-  { id: 'tokio', nombre: 'Tokio', pais: 'Japón', codigoPais: 'JP', coordenadas: { lat: 35.7, lng: 139.7 }, alias: [] },
+  { id: 'tokio', nombre: 'Tokio', pais: 'Japón', codigoPais: 'JP', coordenadas: { lat: 35.7, lng: 139.7 }, alias: [], zonaHoraria: 'Asia/Tokyo' },
 ];
 
 describe('nombreDeVista', () => {
@@ -14,6 +14,8 @@ describe('nombreDeVista', () => {
     expect(nombreDeVista({ tipo: 'favoritas' }, lugares)).toBe('Mis favoritas');
     expect(nombreDeVista({ tipo: 'recientes' }, lugares)).toBe('Recientes');
     expect(nombreDeVista({ tipo: 'emisora', id: 'x' }, lugares)).toBe('Emisora compartida');
+    expect(nombreDeVista({ tipo: 'paises' }, lugares)).toBe('Noticias del mundo');
+    expect(nombreDeVista({ tipo: 'noticias', pais: 'VE' }, lugares)).toBe('Noticias de Venezuela');
   });
 
   it('no se rompe si el índice todavía no ha cargado', () => {

@@ -28,8 +28,24 @@ const seleccion: Seleccion = {
 };
 
 const ciudades: Ciudad[] = [
-  { id: 'lisboa', nombre: 'Lisboa', pais: 'Portugal', codigoPais: 'PT', coordenadas: { lat: 38.7, lng: -9.1 }, alias: ['Lisboa', 'Lisbon'] },
-  { id: 'oporto', nombre: 'Oporto', pais: 'Portugal', codigoPais: 'PT', coordenadas: { lat: 41.1, lng: -8.6 }, alias: ['Porto'] },
+  {
+    id: 'lisboa',
+    nombre: 'Lisboa',
+    pais: 'Portugal',
+    codigoPais: 'PT',
+    coordenadas: { lat: 38.7, lng: -9.1 },
+    alias: ['Lisboa', 'Lisbon'],
+    zonaHoraria: 'Europe/Lisbon',
+  },
+  {
+    id: 'oporto',
+    nombre: 'Oporto',
+    pais: 'Portugal',
+    codigoPais: 'PT',
+    coordenadas: { lat: 41.1, lng: -8.6 },
+    alias: ['Porto'],
+    zonaHoraria: 'Europe/Lisbon',
+  },
 ];
 
 function estacion(parcial: Partial<EstacionRadioBrowser> & { stationuuid: string }): EstacionRadioBrowser {
@@ -56,6 +72,7 @@ function estacion(parcial: Partial<EstacionRadioBrowser> & { stationuuid: string
 interface DobleCliente {
   porUuids?: (uuids: string[]) => Promise<EstacionRadioBrowser[]>;
   buscar?: (parametros: Record<string, string>, limite?: number) => Promise<EstacionRadioBrowser[]>;
+  paises?: () => Promise<Array<{ name: string; stationcount: number }>>;
   registrarClic?: (uuid: string) => Promise<void>;
 }
 
@@ -63,6 +80,7 @@ function clienteFalso(partes: DobleCliente) {
   return {
     porUuids: vi.fn(partes.porUuids ?? (async () => [])),
     buscar: vi.fn(partes.buscar ?? (async () => [])),
+    paises: vi.fn(partes.paises ?? (async () => [])),
     registrarClic: vi.fn(partes.registrarClic ?? (async () => undefined)),
   } as unknown as ClienteRadioBrowser;
 }
@@ -290,6 +308,80 @@ describe('Catalogo — búsqueda', () => {
       'aaaaaaaa-0000-0000-0000-00000000000a',
       'aaaaaaaa-0000-0000-0000-00000000000c',
     ]);
+  });
+});
+
+describe('Catalogo — países y noticias', () => {
+  it('lista los países con emisoras y descarta códigos raros o vacíos', async () => {
+    const { cliente, catalogo } = crear({
+      paises: async () => [
+        { name: 'VE', stationcount: 199 },
+        { name: 'PT', stationcount: 371 },
+        { name: 'The Democratic Republic Of The Congo', stationcount: 3 },
+        { name: 'XX', stationcount: 0 },
+      ],
+    });
+    expect(await catalogo.paises()).toEqual([
+      { codigo: 'VE', emisoras: 199 },
+      { codigo: 'PT', emisoras: 371 },
+    ]);
+    await catalogo.paises();
+    expect(cliente.paises).toHaveBeenCalledTimes(1);
+  });
+
+  it('se queda con las informativas por etiqueta o por nombre, en varios idiomas', async () => {
+    const { cliente, catalogo } = crear({
+      buscar: async (p) =>
+        p['tag']
+          ? [estacion({ stationuuid: 'aaaaaaaa-0000-0000-0000-00000000000e', name: 'Radio Etiquetada', tags: 'news', votes: 1 })]
+          : [
+              estacion({ stationuuid: 'aaaaaaaa-0000-0000-0000-00000000000a', name: 'Unión Radio', tags: 'noticias,talk', votes: 50 }),
+              estacion({ stationuuid: 'aaaaaaaa-0000-0000-0000-00000000000b', name: 'BandNews FM', tags: '', votes: 40 }),
+              estacion({ stationuuid: 'aaaaaaaa-0000-0000-0000-00000000000c', name: 'Pop Hits', tags: 'pop,hits', votes: 90 }),
+              estacion({ stationuuid: 'aaaaaaaa-0000-0000-0000-00000000000d', name: 'Deutschlandfunk', tags: 'nachrichten', votes: 30 }),
+            ],
+    });
+    const r = await catalogo.noticias('VE');
+    expect(r.emisoras.map((e) => e.nombre)).toEqual(['Unión Radio', 'BandNews FM', 'Deutschlandfunk', 'Radio Etiquetada']);
+    expect(r.pais).toBe('Venezuela');
+    expect(r.nota).toMatch(/4 emisoras.*No están comprobadas/);
+    expect(vi.mocked(cliente.buscar).mock.calls[0]?.[0]).toEqual({ countrycode: 'VE' });
+    expect(vi.mocked(cliente.buscar).mock.calls[1]?.[0]).toEqual({ countrycode: 'VE', tag: 'news' });
+  });
+
+  it('sugiere una ciudad del índice para enfocar el globo, si el país tiene alguna', async () => {
+    const { catalogo } = crear({ buscar: async () => [] });
+    expect((await catalogo.noticias('PT')).lugarSugerido?.id).toBe('lisboa');
+    expect((await catalogo.noticias('VE')).lugarSugerido).toBeNull();
+  });
+
+  it('con un fallo parcial responde igualmente pero no guarda en caché', async () => {
+    let falla = true;
+    const { cliente, catalogo } = crear({
+      buscar: async (p) => {
+        if (p['tag'] && falla) throw new Error('caído');
+        return [estacion({ stationuuid: 'aaaaaaaa-0000-0000-0000-00000000000a', name: 'Noticias 1', tags: 'news' })];
+      },
+    });
+    const r1 = await catalogo.noticias('PT');
+    expect(r1.parcial).toBe(true);
+    expect(r1.emisoras).toHaveLength(1);
+    falla = false;
+    const r2 = await catalogo.noticias('PT');
+    expect(r2.parcial).toBe(false);
+    await catalogo.noticias('PT');
+    expect(vi.mocked(cliente.buscar).mock.calls.length).toBe(4);
+  });
+
+  it('falla solo si fallan las dos consultas, y explica el vacío con honestidad', async () => {
+    const caido = crear({
+      buscar: async () => {
+        throw new Error('caído');
+      },
+    });
+    await expect(caido.catalogo.noticias('PT')).rejects.toThrow();
+    const vacio = crear({ buscar: async () => [] });
+    expect((await vacio.catalogo.noticias('PT')).nota).toMatch(/no tiene emisoras informativas de Portugal/);
   });
 });
 

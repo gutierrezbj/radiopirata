@@ -7,7 +7,11 @@ export type Ruta =
   | { tipo: 'busqueda'; q: string; pais?: string }
   | { tipo: 'favoritas' }
   | { tipo: 'recientes' }
-  | { tipo: 'emisora'; id: string };
+  | { tipo: 'emisora'; id: string }
+  /** Elegir país para escuchar sus noticias. */
+  | { tipo: 'paises' }
+  /** Radio informativa de un país, por su código ISO. */
+  | { tipo: 'noticias'; pais: string };
 
 const ID_LUGAR = /^[a-z0-9-]{1,32}$/;
 const CODIGO_PAIS = /^[A-Za-z]{2}$/;
@@ -21,6 +25,8 @@ export function analizar(busqueda: string): Ruta {
   if (emisora !== null && UUID.test(emisora)) return { tipo: 'emisora', id: emisora.toLowerCase() };
   const lugar = p.get('lugar');
   if (lugar !== null && ID_LUGAR.test(lugar)) return { tipo: 'lugar', id: lugar };
+  const noticias = p.get('noticias');
+  if (noticias !== null && CODIGO_PAIS.test(noticias)) return { tipo: 'noticias', pais: noticias.toUpperCase() };
   const q = p.get('q');
   if (q !== null) {
     const limpio = q.replace(/\s+/g, ' ').trim().slice(0, MAX_CONSULTA);
@@ -34,6 +40,7 @@ export function analizar(busqueda: string): Ruta {
   const vista = p.get('vista');
   if (vista === 'favoritas') return { tipo: 'favoritas' };
   if (vista === 'recientes') return { tipo: 'recientes' };
+  if (vista === 'noticias') return { tipo: 'paises' };
   return { tipo: 'inicio' };
 }
 
@@ -51,6 +58,10 @@ export function formatear(ruta: Ruta): string {
       return '/?vista=recientes';
     case 'emisora':
       return `/?emisora=${encodeURIComponent(ruta.id)}`;
+    case 'paises':
+      return '/?vista=noticias';
+    case 'noticias':
+      return `/?noticias=${encodeURIComponent(ruta.pais)}`;
     case 'inicio':
       return '/';
   }

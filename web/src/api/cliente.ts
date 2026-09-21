@@ -1,4 +1,12 @@
-import type { Emisora, RespuestaBusqueda, RespuestaDestinos, RespuestaLugar, RespuestaLugares } from '../tipos';
+import type {
+  Emisora,
+  RespuestaBusqueda,
+  RespuestaDestinos,
+  RespuestaLugar,
+  RespuestaLugares,
+  RespuestaNoticias,
+  RespuestaPaises,
+} from '../tipos';
 
 export class ErrorApi extends Error {
   constructor(
@@ -55,6 +63,14 @@ export function buscar(
   const p = new URLSearchParams({ q: consulta, pagina: String(pagina) });
   if (pais) p.set('pais', pais);
   return pedir<RespuestaBusqueda>(`/api/buscar?${p.toString()}`, signal);
+}
+
+export function obtenerPaises(signal?: AbortSignal): Promise<RespuestaPaises> {
+  return pedir<RespuestaPaises>('/api/paises', signal);
+}
+
+export function obtenerNoticias(codigoPais: string, signal?: AbortSignal): Promise<RespuestaNoticias> {
+  return pedir<RespuestaNoticias>(`/api/noticias?pais=${encodeURIComponent(codigoPais)}`, signal);
 }
 
 export function obtenerEmisora(id: string, signal?: AbortSignal): Promise<{ emisora: Emisora }> {

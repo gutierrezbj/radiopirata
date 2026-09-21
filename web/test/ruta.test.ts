@@ -21,6 +21,14 @@ describe('analizar', () => {
     expect(analizar('?vista=loquesea')).toEqual({ tipo: 'inicio' });
   });
 
+  it('entiende las vistas de noticias: elegir país y país concreto', () => {
+    expect(analizar('?vista=noticias')).toEqual({ tipo: 'paises' });
+    expect(analizar('?noticias=ve')).toEqual({ tipo: 'noticias', pais: 'VE' });
+    expect(analizar('?noticias=VEN')).toEqual({ tipo: 'inicio' });
+    expect(formatear({ tipo: 'noticias', pais: 'VE' })).toBe('/?noticias=VE');
+    expect(formatear({ tipo: 'paises' })).toBe('/?vista=noticias');
+  });
+
   it('entiende la búsqueda por código de país y descarta un código mal escrito', () => {
     expect(analizar('?q=Jap%C3%B3n&pais=jp')).toEqual({ tipo: 'busqueda', q: 'Japón', pais: 'JP' });
     expect(analizar('?q=Jap%C3%B3n&pais=JPN')).toEqual({ tipo: 'busqueda', q: 'Japón' });
@@ -51,6 +59,8 @@ describe('formatear', () => {
       { tipo: 'favoritas' },
       { tipo: 'recientes' },
       { tipo: 'emisora', id: UUID },
+      { tipo: 'paises' },
+      { tipo: 'noticias', pais: 'VE' },
     ];
     for (const ruta of rutas) {
       const url = formatear(ruta);

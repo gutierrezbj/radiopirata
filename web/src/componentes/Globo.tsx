@@ -1,11 +1,12 @@
 import Globe, { type GlobeInstance } from 'globe.gl';
 import { useEffect, useRef } from 'react';
-import type { MeshPhongMaterial } from 'three';
+import { AmbientLight, DirectionalLight, type MeshPhongMaterial } from 'three';
 import { feature } from 'topojson-client';
 import type { Topology } from 'topojson-specification';
 import tierra from 'world-atlas/land-110m.json';
 import type { Emisora, Lugar } from '../tipos';
 import { pixelRatioAdecuado, prefiereMenosMovimiento } from '../util/entorno';
+import { posicionDelSol } from '../util/sol';
 
 interface Props {
   /** Todas las ciudades del índice propio: son los puntos que se pueden abrir. */
@@ -38,6 +39,8 @@ type Punto = PuntoLugar | PuntoEmisora;
 const ALTITUD_DESTINO = 1.6;
 /** Tiempo sin tocar el globo tras el cual se deja de dibujar. Nada se mueve solo, así que no se pierde nada. */
 const SIESTA_MS = 3000;
+/** Cada cuánto se recoloca el sol. En cinco minutos se mueve poco más de un grado. */
+const RELOJ_SOLAR_MS = 5 * 60_000;
 const topologia = tierra as unknown as Topology;
 const superficie = feature(topologia, topologia.objects['land'] as Parameters<typeof feature>[1]);
 const poligonos = superficie.type === 'FeatureCollection' ? superficie.features : [superficie];
@@ -105,6 +108,17 @@ export function Globo({ lugares, lugarEnfocado, emisoras, alElegirLugar, alPasar
     material.emissive.set('#0E1012');
     material.shininess = 4;
 
+    // Día y noche de verdad: una luz cálida desde donde está el sol ahora y poca luz ambiente,
+    // así la mitad del mundo que duerme se ve más oscura. Se recoloca cada pocos minutos.
+    const ambiente = new AmbientLight(0xffffff, 0.3);
+    const sol = new DirectionalLight(0xfff1d0, 1.25);
+    g.lights([ambiente, sol]);
+    const colocarSol = () => {
+      const p = posicionDelSol(new Date());
+      sol.position.set(p.x, p.y, p.z);
+    };
+    colocarSol();
+
     g.renderer().setPixelRatio(pixelRatioAdecuado());
     const controles = g.controls();
     // Sin giro automático: el lugar elegido debe quedarse a la vista.
@@ -140,6 +154,10 @@ export function Globo({ lugares, lugarEnfocado, emisoras, alElegirLugar, alPasar
     };
     despertar.current = activar;
     activar();
+    const relojSolar = setInterval(() => {
+      colocarSol();
+      activar();
+    }, RELOJ_SOLAR_MS);
 
     const interaccion = () => activar();
     for (const evento of ['pointerdown', 'pointermove', 'wheel', 'touchstart'] as const) {
@@ -167,6 +185,7 @@ export function Globo({ lugares, lugarEnfocado, emisoras, alElegirLugar, alPasar
         el.removeEventListener(evento, interaccion);
       }
       if (siesta !== null) clearTimeout(siesta);
+      clearInterval(relojSolar);
       despertar.current = () => undefined;
       observador.disconnect();
       g.pauseAnimation();

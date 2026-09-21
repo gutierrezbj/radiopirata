@@ -98,6 +98,18 @@ describe('API — búsqueda', () => {
   });
 });
 
+describe('API — países y noticias', () => {
+  it('valida el código de país de las noticias', async () => {
+    expect((await fetch(`${base}/api/noticias`)).status).toBe(400);
+    expect((await fetch(`${base}/api/noticias?pais=VEN`)).status).toBe(400);
+  });
+
+  it('avisa con 502 si el catálogo no responde a países ni a noticias', async () => {
+    expect((await fetch(`${base}/api/paises`)).status).toBe(502);
+    expect((await fetch(`${base}/api/noticias?pais=VE`)).status).toBe(502);
+  });
+});
+
 describe('API — emisoras', () => {
   it('devuelve una emisora de la selección verificada por su identificador', async () => {
     const r = await fetch(`${base}/api/emisoras/cc461784-3150-4a34-81c5-2116fe024740`);

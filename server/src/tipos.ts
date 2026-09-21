@@ -20,6 +20,14 @@ export interface Ciudad {
   coordenadas: Coordenadas;
   /** Nombres con los que el catálogo suele etiquetar el lugar; se usan para consultarlo. */
   alias: string[];
+  /** Zona horaria IANA, para decir qué hora es allí. */
+  zonaHoraria: string;
+}
+
+/** País con emisoras en el catálogo. El nombre lo pone cada cliente en su idioma. */
+export interface Pais {
+  codigo: string;
+  emisoras: number;
 }
 
 export interface Emisora {

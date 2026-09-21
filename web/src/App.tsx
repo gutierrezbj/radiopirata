@@ -7,6 +7,7 @@ import { Reproductor } from './componentes/Reproductor';
 import type { Destino, Lugar } from './tipos';
 import { lugarAlAzar } from './util/lugares';
 import { navegar, useRuta } from './util/ruta';
+import { esDeNoche } from './util/sol';
 import { nombreDeVista, tituloDeRuta } from './util/titulo';
 
 export interface EstadoIndice {
@@ -60,13 +61,28 @@ export function App() {
     navegar({ tipo: 'lugar', id: lugar.id });
   }, [indice.lugares]);
 
+  /** Igual, pero solo entre las ciudades donde ahora mismo es de noche. Siempre hay alguna. */
+  const sorprenderDeNoche = useCallback(() => {
+    const ahora = new Date();
+    const aOscuras = indice.lugares.filter((l) => esDeNoche(l.coordenadas.lat, l.coordenadas.lng, ahora));
+    const lugar = lugarAlAzar(aOscuras.length > 0 ? aOscuras : indice.lugares);
+    if (!lugar) return;
+    setSorpresa(true);
+    navegar({ tipo: 'lugar', id: lugar.id });
+  }, [indice.lugares]);
+
   // El reproductor se mantiene mientras haya algo elegido, también al volver al inicio.
   const hayReproductor = audioEstado.emisora !== null;
 
   return (
     <div className={`app ${hayReproductor ? 'app--con-reproductor' : ''}`}>
       {ruta.tipo === 'inicio' ? (
-        <Inicio indice={indice} alReintentar={() => setIntento((n) => n + 1)} alSorprender={sorprender} />
+        <Inicio
+          indice={indice}
+          alReintentar={() => setIntento((n) => n + 1)}
+          alSorprender={sorprender}
+          alSorprenderDeNoche={sorprenderDeNoche}
+        />
       ) : (
         <Explorador
           ruta={ruta}
@@ -76,7 +92,7 @@ export function App() {
           alSorprender={sorprender}
         />
       )}
-      {hayReproductor && <Reproductor />}
+      {hayReproductor && <Reproductor lugares={indice.lugares} />}
       {/* Aquí no se pinta nada: es el aviso de cambio de vista para lectores de pantalla. */}
       <p className="visualmente-oculto" role="status" aria-live="polite">
         {vista}

@@ -7,14 +7,14 @@ La música siempre es buena compañía.
 
 ## Estado
 
-**E1, E2 y E3 implementadas (2026-09-21).** Se busca en todo el catálogo por ciudad, país y estilo; hay un índice propio de 72 ciudades con coordenadas fiables, favoritas y recientes en el dispositivo, filtros por estilo y enlaces para compartir una emisora. La selección comprobada a mano de E1 sigue marcada como tal. El despliegue está preparado y documentado.
+**E1 a E4 implementadas (2026-09-21).** Se busca en todo el catálogo por ciudad, país y estilo; hay un índice propio de 72 ciudades con coordenadas y zona horaria fiables, favoritas y recientes en el dispositivo, filtros por estilo y enlaces para compartir con tarjeta. La E4 acerca a casa: noticias de cualquier país, temporizador para dormirse con la radio puesta, la hora de allí y un globo con día y noche de verdad. La selección comprobada a mano de E1 sigue marcada como tal. El despliegue está preparado y documentado.
 
 **No está publicada.** No hay alojamiento elegido, no se ha tocado el DNS y no se ha pedido ningún certificado. Publicar necesita la indicación de JuanCho y decidir dónde va.
 
 - Encargo y arquitectura: [AGENTS.md](AGENTS.md), [docs/ENCARGO.md](docs/ENCARGO.md).
 - Progreso y pendientes: [tasks/todo.md](tasks/todo.md).
 - Cómo desplegarla: [docs/DESPLIEGUE.md](docs/DESPLIEGUE.md).
-- Evidencia: [E1](docs/VERIFICACION-E1.md), [E2](docs/VERIFICACION-E2.md) y [E3](docs/VERIFICACION-E3.md).
+- Evidencia: [E1](docs/VERIFICACION-E1.md), [E2](docs/VERIFICACION-E2.md), [E3](docs/VERIFICACION-E3.md) y [E4](docs/VERIFICACION-E4.md).
 - Sincronización de la carpeta local: [docs/SINCRONIZACION.md](docs/SINCRONIZACION.md).
 - Repositorio: https://github.com/gutierrezbj/radiopirata · Destino previsto: `radio.jrgblanco.com` (pendiente de configurar).
 
@@ -76,7 +76,7 @@ Sondea cada emisora por HTTP con User-Agent de navegador y actualiza `docs/VERIF
 | Comprobación | Resultado |
 |---|---|
 | `npm run typecheck` | sin errores (server y web) |
-| `npm test` | 64 pruebas en server, 68 en web, todas en verde |
+| `npm test` | 83 pruebas en server, 88 en web, todas en verde |
 | `npm run build` | correcto |
 | Peso de la página de inicio | 82 kB transferidos; el globo son otros 550 kB que solo se cargan al entrar al explorador |
 | Contraste del tema | mínimo 6,6:1, muy por encima del 4,5:1 exigible |
@@ -95,7 +95,10 @@ Detalle y limitaciones: [docs/VERIFICACION-E3.md](docs/VERIFICACION-E3.md). Lo q
 - **Compartir una emisora** con un enlace `?emisora=<id>` que abre su ficha.
 - **Ver la sintonía**: un anillo alrededor del botón de reproducir que va de rojo a ámbar y a verde según entra la señal, como el dial de una radio. No es decoración: sale de `readyState`, que es lo que el navegador sabe sobre cuánto audio tiene ya listo. Si la señal falla, el anillo se cierra entero en rojo.
 - **Pasar a la anterior o la siguiente** de la lista desde la que se eligió lo que suena.
-- **Sorpréndeme**: una ciudad al azar del índice y una emisora al azar de esa ciudad.
+- **Sorpréndeme**: una ciudad al azar del índice y una emisora al azar de esa ciudad. **Donde ya es de noche** hace lo mismo solo entre las ciudades donde ahora es de noche.
+- **Noticias de tu país**, o de cualquiera de los 241 con emisoras en el catálogo: las que el catálogo o su nombre presentan como informativas, sin comprobar una a una y diciéndolo.
+- **Dormirse con la radio puesta**: temporizador de 15 a 60 minutos que baja el volumen al final y pausa. Cuenta contra una hora fija, así que funciona aunque la pestaña esté en segundo plano.
+- **Saber qué hora es allí**: «Allí son las 22:14, por la noche» en cada ciudad del índice y junto a la emisora que suena. El globo se ilumina desde donde está el sol, calculado con la fecha.
 
 ## Estructura
 
@@ -126,10 +129,12 @@ Piezas clave:
 | `GET /api/lugares` | índice propio de ciudades con coordenadas |
 | `GET /api/lugares/:id/emisoras` | emisoras de una ciudad: comprobadas primero, catálogo después |
 | `GET /api/buscar?q=&pagina=&pais=` | búsqueda por nombre, estilo y país; `pais` es el código ISO de dos letras |
+| `GET /api/paises` | países con emisoras, con el recuento del catálogo |
+| `GET /api/noticias?pais=XX` | radio informativa de un país por su código ISO |
 | `GET /api/emisoras/:id` | una emisora, para abrir un enlace compartido |
 | `POST /api/emisoras/:id/clic` | registro de escucha de Radio Browser, solo al empezar a sonar |
 
-El audio nunca pasa por la API: va del servidor de la emisora al navegador.
+El audio nunca pasa por la API: va del servidor de la emisora al navegador. Al pedir la página con `?lugar=`, `?emisora=` o `?noticias=`, el servidor pone el título y las etiquetas Open Graph, así que un enlace pegado en WhatsApp dice qué es.
 
 ## Configuración y despliegue
 

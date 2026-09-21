@@ -3,10 +3,10 @@ import type { Lugar } from '../src/tipos';
 import { buscarLugares, lugarAlAzar, lugarExacto } from '../src/util/lugares';
 
 const lugares: Lugar[] = [
-  { id: 'tokio', nombre: 'Tokio', pais: 'Japón', codigoPais: 'JP', coordenadas: { lat: 35.7, lng: 139.7 }, alias: ['Tokyo', '東京'] },
-  { id: 'osaka', nombre: 'Osaka', pais: 'Japón', codigoPais: 'JP', coordenadas: { lat: 34.7, lng: 135.5 }, alias: ['Osaka'] },
-  { id: 'lisboa', nombre: 'Lisboa', pais: 'Portugal', codigoPais: 'PT', coordenadas: { lat: 38.7, lng: -9.1 }, alias: ['Lisbon'] },
-  { id: 'oporto', nombre: 'Oporto', pais: 'Portugal', codigoPais: 'PT', coordenadas: { lat: 41.1, lng: -8.6 }, alias: ['Porto'] },
+  { id: 'tokio', nombre: 'Tokio', pais: 'Japón', codigoPais: 'JP', coordenadas: { lat: 35.7, lng: 139.7 }, alias: ['Tokyo', '東京'], zonaHoraria: 'Asia/Tokyo' },
+  { id: 'osaka', nombre: 'Osaka', pais: 'Japón', codigoPais: 'JP', coordenadas: { lat: 34.7, lng: 135.5 }, alias: ['Osaka'], zonaHoraria: 'Asia/Tokyo' },
+  { id: 'lisboa', nombre: 'Lisboa', pais: 'Portugal', codigoPais: 'PT', coordenadas: { lat: 38.7, lng: -9.1 }, alias: ['Lisbon'], zonaHoraria: 'Europe/Lisbon' },
+  { id: 'oporto', nombre: 'Oporto', pais: 'Portugal', codigoPais: 'PT', coordenadas: { lat: 41.1, lng: -8.6 }, alias: ['Porto'], zonaHoraria: 'Europe/Lisbon' },
 ];
 
 describe('buscarLugares', () => {

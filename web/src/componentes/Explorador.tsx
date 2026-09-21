@@ -1,18 +1,20 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { almacen } from '../almacen/local';
 import { useAlmacen } from '../almacen/useAlmacen';
-import { buscar, obtenerEmisora, obtenerEmisorasDeLugar } from '../api/cliente';
+import { buscar, obtenerEmisora, obtenerEmisorasDeLugar, obtenerNoticias, obtenerPaises } from '../api/cliente';
 import { reproducirDesde } from '../audio/reproducir';
 import { useAudio } from '../audio/useAudio';
 import type { EstadoIndice } from '../App';
-import type { Emisora, Lugar, RespuestaBusqueda, RespuestaLugar } from '../tipos';
+import type { Emisora, Lugar, Pais, RespuestaBusqueda, RespuestaLugar, RespuestaNoticias } from '../tipos';
 import { filtrarPorEtiqueta, filtrosDe } from '../util/filtros';
 import { lugarDeEmisora } from '../util/lugar';
 import { claveDeRuta, navegar, type Ruta } from '../util/ruta';
 import { hayWebGL } from '../util/entorno';
+import { useHoraLocal } from '../util/useHoraLocal';
 import { Buscador } from './Buscador';
 import { IconoRadio } from './Iconos';
 import { PanelEmisoras, type ContenidoPanel } from './PanelEmisoras';
+import { PanelPaises } from './PanelPaises';
 
 const Globo = lazy(() => import('./Globo').then((m) => ({ default: m.Globo })));
 
@@ -22,7 +24,9 @@ type Remoto =
   | { estado: 'error'; mensaje: string }
   | { estado: 'lugar'; datos: RespuestaLugar }
   | { estado: 'busqueda'; datos: RespuestaBusqueda; emisoras: Emisora[] }
-  | { estado: 'emisora'; emisora: Emisora };
+  | { estado: 'emisora'; emisora: Emisora }
+  | { estado: 'paises'; paises: Pais[] }
+  | { estado: 'noticias'; datos: RespuestaNoticias };
 
 interface Props {
   ruta: Exclude<Ruta, { tipo: 'inicio' }>;
@@ -54,14 +58,16 @@ export function Explorador({ ruta, indice, sorpresa, alConsumirSorpresa, alSorpr
     }
     const control = new AbortController();
     setRemoto({ estado: 'cargando' });
-    const peticion =
+    const peticion: Promise<Remoto> =
       ruta.tipo === 'lugar'
-        ? obtenerEmisorasDeLugar(ruta.id, control.signal).then((datos): Remoto => ({ estado: 'lugar', datos }))
+        ? obtenerEmisorasDeLugar(ruta.id, control.signal).then((datos) => ({ estado: 'lugar', datos }))
         : ruta.tipo === 'busqueda'
-          ? buscar(ruta.q, 1, ruta.pais, control.signal).then(
-              (datos): Remoto => ({ estado: 'busqueda', datos, emisoras: datos.emisoras }),
-            )
-          : obtenerEmisora(ruta.id, control.signal).then(({ emisora }): Remoto => ({ estado: 'emisora', emisora }));
+          ? buscar(ruta.q, 1, ruta.pais, control.signal).then((datos) => ({ estado: 'busqueda', datos, emisoras: datos.emisoras }))
+          : ruta.tipo === 'paises'
+            ? obtenerPaises(control.signal).then((r) => ({ estado: 'paises', paises: r.paises }))
+            : ruta.tipo === 'noticias'
+              ? obtenerNoticias(ruta.pais, control.signal).then((datos) => ({ estado: 'noticias', datos }))
+              : obtenerEmisora(ruta.id, control.signal).then(({ emisora }) => ({ estado: 'emisora', emisora }));
 
     peticion
       .then((siguiente) => {
@@ -92,6 +98,7 @@ export function Explorador({ ruta, indice, sorpresa, alConsumirSorpresa, alSorpr
     () => (ruta.tipo === 'lugar' ? (indice.lugares.find((l) => l.id === ruta.id) ?? null) : null),
     [ruta, indice.lugares],
   );
+  const { frase: horaDelLugar } = useHoraLocal(lugarDelIndice?.zonaHoraria);
 
   const contenido = useMemo(
     () => construirContenido(ruta, remoto, datosAlmacen.favoritas, datosAlmacen.recientes, lugarDelIndice),
@@ -119,7 +126,9 @@ export function Explorador({ ruta, indice, sorpresa, alConsumirSorpresa, alSorpr
       .finally(() => setCargandoMas(false));
   }, [remoto, cargandoMas, ruta]);
 
-  const lugarEnfocado = lugarDelIndice ?? (remoto.estado === 'lugar' ? remoto.datos.lugar : null);
+  const lugarEnfocado =
+    lugarDelIndice ??
+    (remoto.estado === 'lugar' ? remoto.datos.lugar : remoto.estado === 'noticias' ? remoto.datos.lugarSugerido : null);
   const estadoPanel = remoto.estado === 'cargando' ? 'cargando' : remoto.estado === 'error' ? 'error' : 'listo';
 
   return (
@@ -136,18 +145,26 @@ export function Explorador({ ruta, indice, sorpresa, alConsumirSorpresa, alSorpr
           compacto
           inicial={ruta.tipo === 'busqueda' ? ruta.q : ''}
         />
-        {datosAlmacen.disponible && (
-          <nav className="explorador__atajos" aria-label="Lo tuyo">
-            {datosAlmacen.recientes.length > 0 && (
-              <button
-                type="button"
-                className="ficha ficha--pequena"
-                aria-current={ruta.tipo === 'recientes' ? 'true' : undefined}
-                onClick={() => navegar({ tipo: 'recientes' })}
-              >
-                Recientes
-              </button>
-            )}
+        <nav className="explorador__atajos" aria-label="Lo tuyo">
+          <button
+            type="button"
+            className="ficha ficha--pequena"
+            aria-current={ruta.tipo === 'paises' || ruta.tipo === 'noticias' ? 'true' : undefined}
+            onClick={() => navegar({ tipo: 'paises' })}
+          >
+            Noticias
+          </button>
+          {datosAlmacen.disponible && datosAlmacen.recientes.length > 0 && (
+            <button
+              type="button"
+              className="ficha ficha--pequena"
+              aria-current={ruta.tipo === 'recientes' ? 'true' : undefined}
+              onClick={() => navegar({ tipo: 'recientes' })}
+            >
+              Recientes
+            </button>
+          )}
+          {datosAlmacen.disponible && (
             <button
               type="button"
               className="ficha ficha--pequena"
@@ -156,35 +173,45 @@ export function Explorador({ ruta, indice, sorpresa, alConsumirSorpresa, alSorpr
             >
               Favoritas{datosAlmacen.favoritas.length > 0 ? ` (${datosAlmacen.favoritas.length})` : ''}
             </button>
-          </nav>
-        )}
+          )}
+        </nav>
       </header>
 
       <div className="explorador__cuerpo">
-        <PanelEmisoras
-          estado={estadoPanel}
-          mensajeError={remoto.estado === 'error' ? remoto.mensaje : null}
-          claveVista={clave}
-          contenido={{ ...contenido, emisoras: visibles, hayMas: contenido.hayMas && etiqueta === null }}
-          filtros={filtros}
-          etiqueta={etiqueta}
-          emisoraActual={audioEstado.emisora}
-          estadoAudio={audioEstado.estado}
-          hayFavoritas={datosAlmacen.disponible}
-          avisoAlmacen={
-            datosAlmacen.disponible
-              ? null
-              : 'Este navegador no deja guardar nada en el dispositivo, así que favoritas y recientes están desactivadas.'
-          }
-          cargandoMas={cargandoMas}
-          esFavorita={esFavorita}
-          alElegirEtiqueta={setEtiqueta}
-          alElegir={elegir}
-          alAlternarFavorita={alternarFavorita}
-          alVerMas={verMas}
-          alReintentar={() => setIntento((n) => n + 1)}
-          acciones={acciones(ruta, remoto, alSorprender)}
-        />
+        {ruta.tipo === 'paises' ? (
+          <PanelPaises
+            estado={estadoPanel}
+            paises={remoto.estado === 'paises' ? remoto.paises : []}
+            mensajeError={remoto.estado === 'error' ? remoto.mensaje : null}
+            alReintentar={() => setIntento((n) => n + 1)}
+          />
+        ) : (
+          <PanelEmisoras
+            estado={estadoPanel}
+            mensajeError={remoto.estado === 'error' ? remoto.mensaje : null}
+            claveVista={clave}
+            contenido={{ ...contenido, emisoras: visibles, hayMas: contenido.hayMas && etiqueta === null }}
+            hora={horaDelLugar}
+            filtros={filtros}
+            etiqueta={etiqueta}
+            emisoraActual={audioEstado.emisora}
+            estadoAudio={audioEstado.estado}
+            hayFavoritas={datosAlmacen.disponible}
+            avisoAlmacen={
+              datosAlmacen.disponible
+                ? null
+                : 'Este navegador no deja guardar nada en el dispositivo, así que favoritas y recientes están desactivadas.'
+            }
+            cargandoMas={cargandoMas}
+            esFavorita={esFavorita}
+            alElegirEtiqueta={setEtiqueta}
+            alElegir={elegir}
+            alAlternarFavorita={alternarFavorita}
+            alVerMas={verMas}
+            alReintentar={() => setIntento((n) => n + 1)}
+            acciones={acciones(ruta, remoto, alSorprender)}
+          />
+        )}
 
         <section className="escena" aria-label="Globo terráqueo">
           {conWebGL ? (
@@ -215,19 +242,34 @@ export function Explorador({ ruta, indice, sorpresa, alConsumirSorpresa, alSorpr
 
 function acciones(ruta: Props['ruta'], remoto: Remoto, alSorprender: () => void): React.ReactNode {
   if (ruta.tipo === 'lugar' && remoto.estado === 'lugar') {
+    const { lugar } = remoto.datos;
     return (
       <div className="panel__acciones">
+        <button type="button" className="boton boton--secundario" onClick={() => navegar({ tipo: 'noticias', pais: lugar.codigoPais })}>
+          Noticias de {lugar.pais}
+        </button>
         <button
           type="button"
           className="boton boton--secundario"
-          onClick={() =>
-            navegar({ tipo: 'busqueda', q: remoto.datos.lugar.pais, pais: remoto.datos.lugar.codigoPais })
-          }
+          onClick={() => navegar({ tipo: 'busqueda', q: lugar.pais, pais: lugar.codigoPais })}
         >
-          Ver emisoras de {remoto.datos.lugar.pais}
+          Ver emisoras de {lugar.pais}
         </button>
         <button type="button" className="boton boton--secundario" onClick={alSorprender}>
           Sorpréndeme
+        </button>
+      </div>
+    );
+  }
+  if (ruta.tipo === 'noticias' && remoto.estado === 'noticias') {
+    const { pais, codigoPais } = remoto.datos;
+    return (
+      <div className="panel__acciones">
+        <button type="button" className="boton boton--secundario" onClick={() => navegar({ tipo: 'busqueda', q: pais, pais: codigoPais })}>
+          Todas las emisoras de {pais}
+        </button>
+        <button type="button" className="boton boton--secundario" onClick={() => navegar({ tipo: 'paises' })}>
+          Otro país
         </button>
       </div>
     );
@@ -330,6 +372,17 @@ function construirContenido(
         vacio: remoto.datos.nota,
         hayMas: remoto.datos.hayMas,
       };
+    case 'noticias':
+      if (remoto.estado !== 'noticias') return { ...vacio, titulo: 'Noticias', subtitulo: 'Radio informativa, en directo' };
+      return {
+        ...vacio,
+        titulo: `Noticias de ${remoto.datos.pais}`,
+        subtitulo: 'Radio informativa, en directo',
+        emisoras: remoto.datos.emisoras,
+        conLugar: true,
+        nota: remoto.datos.emisoras.length > 0 ? remoto.datos.nota : null,
+        vacio: remoto.datos.nota,
+      };
     case 'emisora':
       if (remoto.estado !== 'emisora') return { ...vacio, titulo: 'Emisora compartida' };
       return {
@@ -339,5 +392,7 @@ function construirContenido(
         emisoras: [remoto.emisora],
         nota: 'Te han compartido esta emisora. Pulsa para escucharla y sigue explorando desde aquí.',
       };
+    case 'paises':
+      return { ...vacio, titulo: 'Noticias del mundo' };
   }
 }

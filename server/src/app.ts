@@ -1,9 +1,10 @@
 import compression from 'compression';
 import express, { type Express } from 'express';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { cabecerasSeguras } from './cabeceras.js';
 import { MAX_RESULTADOS, POR_PAGINA, type Catalogo } from './catalogo.js';
+import { inyectarTarjeta, tarjetaDeRuta } from './tarjeta.js';
 import { codigoPaisValido, consultaValida, esIdDestino, esUuid, MAX_CONSULTA, paginaValida } from './validacion.js';
 
 export interface OpcionesApp {
@@ -119,6 +120,33 @@ export function crearApp({ catalogo, webDist, proxiesDeConfianza = 0, hsts = fal
     }
   });
 
+  // --- Países y noticias ---
+
+  app.get('/api/paises', async (_req, res) => {
+    try {
+      const paises = await catalogo.paises();
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      res.json({ paises, nota: 'Países con emisoras en el catálogo, con su recuento. El nombre lo pone cada idioma.' });
+    } catch {
+      res.status(502).json({ error: 'El catálogo no ha respondido. Inténtalo otra vez en un momento.' });
+    }
+  });
+
+  app.get('/api/noticias', async (req, res) => {
+    const codigo = codigoPaisValido(req.query['pais']);
+    if (codigo === null) {
+      res.status(400).json({ error: 'Indica el país con su código de dos letras.' });
+      return;
+    }
+    try {
+      const respuesta = await catalogo.noticias(codigo);
+      res.setHeader('Cache-Control', 'public, max-age=60');
+      res.json(respuesta);
+    } catch {
+      res.status(502).json({ error: 'El catálogo no ha respondido. Inténtalo otra vez en un momento.' });
+    }
+  });
+
   // --- Emisoras ---
 
   app.get('/api/emisoras/:id', async (req, res) => {
@@ -170,9 +198,13 @@ export function crearApp({ catalogo, webDist, proxiesDeConfianza = 0, hsts = fal
         }),
       );
       app.use(express.static(carpeta, { index: false, maxAge: '1h' }));
-      app.get(/.*/, (_req, res) => {
+      // La plantilla se lee una vez; cada petición recibe su título y su tarjeta para compartir.
+      const plantilla = readFileSync(indice, 'utf8');
+      app.get(/.*/, async (req, res) => {
+        const tarjeta = await tarjetaDeRuta(req.query as Record<string, unknown>, catalogo);
+        const url = `${req.protocol}://${req.get('host') ?? 'localhost'}${req.originalUrl}`;
         res.setHeader('Cache-Control', 'no-cache');
-        res.sendFile(indice);
+        res.type('html').send(inyectarTarjeta(plantilla, tarjeta, url));
       });
     }
   }

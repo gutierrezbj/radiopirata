@@ -48,6 +48,16 @@
 - Una búsqueda devuelve como mucho 120 emisoras.
 - Sin captura de audio: «reproduce» significa evento `playing` del navegador, no escucha con altavoces.
 
+## E4 — Acercar a casa · terminada el 2026-09-21
+El norte lo puso JuanCho: la radio local de casa para quien vive fuera. Ver `docs/VERIFICACION-E4.md`.
+- [x] Noticias por país: 241 países con recuento real, emisoras que el catálogo o su nombre presentan como informativas, nota honesta.
+- [x] Temporizador para dormirse con la radio puesta (15 a 60 min), con fundido final donde el navegador lo permite y cuenta contra hora fija.
+- [x] Zona horaria en las 72 ciudades del índice, validada al arrancar; hora de allí en el panel y en el reproductor.
+- [x] Día y noche en el globo desde la posición real del sol; «Donde ya es de noche» en el inicio.
+- [x] Tarjeta al compartir: título y Open Graph puestos por el servidor para lugar, emisora, noticias y búsqueda.
+- [ ] Imagen de la tarjeta (1200×630): falta un diseño; no se improvisa.
+- [ ] Escuchar una a una las emisoras informativas de Venezuela.
+
 ## E3 — Preparación pública · preparada el 2026-09-21
 - [x] Rendimiento: compresión en el servidor, caché inmutable para ficheros con hash, densidad de píxeles del globo según el equipo y globo que deja de dibujarse cuando nadie lo toca.
 - [x] Medir lo que se descarga de verdad: 82 kB en el inicio; el globo son otros 550 kB y solo los paga quien entra al explorador.

@@ -19,6 +19,28 @@ export interface Lugar {
   codigoPais: string;
   coordenadas: Coordenadas;
   alias: string[];
+  /** Zona horaria IANA, para decir qué hora es allí. */
+  zonaHoraria: string;
+}
+
+/** País con emisoras en el catálogo. El nombre en español lo pone el navegador. */
+export interface Pais {
+  codigo: string;
+  emisoras: number;
+}
+
+export interface RespuestaPaises {
+  paises: Pais[];
+  nota: string;
+}
+
+export interface RespuestaNoticias {
+  codigoPais: string;
+  pais: string;
+  emisoras: Emisora[];
+  lugarSugerido: Lugar | null;
+  parcial: boolean;
+  nota: string;
 }
 
 export interface Emisora {

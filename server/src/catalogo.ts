@@ -1,7 +1,8 @@
 import { CacheAcotada } from './cache.js';
 import { buscarLugares } from './lugares.js';
-import { aEmisora, ClienteRadioBrowser, estacionReproducible, fusionarEstaciones } from './radioBrowser.js';
-import type { Ciudad, Destino, Emisora, Seleccion } from './tipos.js';
+import { nombreDePais } from './paises.js';
+import { aEmisora, ClienteRadioBrowser, esInformativa, estacionReproducible, fusionarEstaciones } from './radioBrowser.js';
+import type { Ciudad, Destino, Emisora, Pais, Seleccion } from './tipos.js';
 
 export interface RespuestaEmisoras {
   destino: Destino;
@@ -35,11 +36,26 @@ export interface RespuestaBusqueda {
   nota: string;
 }
 
+export interface RespuestaNoticias {
+  codigoPais: string;
+  pais: string;
+  emisoras: Emisora[];
+  /** Ciudad del índice en ese país, para enfocar el globo. Null si no hay ninguna. */
+  lugarSugerido: Ciudad | null;
+  parcial: boolean;
+  nota: string;
+}
+
 type EnCache =
   | { clase: 'destino'; valor: RespuestaEmisoras }
   | { clase: 'lugar'; valor: RespuestaLugar }
   | { clase: 'busqueda'; valor: RespuestaBusqueda }
-  | { clase: 'emisora'; valor: Emisora | null };
+  | { clase: 'emisora'; valor: Emisora | null }
+  | { clase: 'paises'; valor: Pais[] }
+  | { clase: 'noticias'; valor: RespuestaNoticias };
+
+/** Cuántas emisoras del país se piden para buscar entre ellas las informativas. */
+const POR_PAIS = 200;
 
 /** Tope de resultados que puede devolver una búsqueda, por mucho que el catálogo tenga más. */
 export const MAX_RESULTADOS = 120;
@@ -233,6 +249,58 @@ export class Catalogo {
     };
   }
 
+  // --- Países y noticias ---
+
+  /** Países con emisoras según el propio catálogo. Solo códigos de dos letras válidos. */
+  async paises(): Promise<Pais[]> {
+    const enCache = this.cache.get('paises');
+    if (enCache?.clase === 'paises') return enCache.valor;
+    const brutos = await this.cliente.paises();
+    const paises = brutos
+      .filter((p) => /^[A-Z]{2}$/.test(p.name) && Number.isInteger(p.stationcount) && p.stationcount > 0)
+      .map((p) => ({ codigo: p.name, emisoras: p.stationcount }));
+    this.cache.set('paises', { clase: 'paises', valor: paises });
+    return paises;
+  }
+
+  /**
+   * Emisoras informativas de un país. Se piden las más votadas del país y las etiquetadas
+   * como «news», y entre todas se quedan las que el catálogo o su nombre presentan como
+   * informativas. No hay comprobación nuestra de que lo sean: se dice en la nota.
+   */
+  async noticias(codigoPais: string): Promise<RespuestaNoticias> {
+    const clave = `noticias:${codigoPais}`;
+    const enCache = this.cache.get(clave);
+    if (enCache?.clase === 'noticias') return enCache.valor;
+
+    const [amplia, etiquetadas] = await Promise.allSettled([
+      this.cliente.buscar({ countrycode: codigoPais }, POR_PAIS),
+      this.cliente.buscar({ countrycode: codigoPais, tag: 'news' }, POR_CONSULTA),
+    ]);
+    if (amplia.status === 'rejected' && etiquetadas.status === 'rejected') {
+      throw amplia.reason instanceof Error ? amplia.reason : new Error('El catálogo no ha respondido');
+    }
+    const listas = [amplia, etiquetadas].flatMap((r) =>
+      r.status === 'fulfilled' ? [r.value.filter(estacionReproducible).filter(esInformativa)] : [],
+    );
+    const emisoras = fusionarEstaciones(listas, MAX_RESULTADOS).flatMap((e) => {
+      const emisora = aEmisora(e, '');
+      return emisora ? [emisora] : [];
+    });
+    const parcial = amplia.status === 'rejected' || etiquetadas.status === 'rejected';
+    const pais = nombreDePais(codigoPais, this.ciudades);
+    const respuesta: RespuestaNoticias = {
+      codigoPais,
+      pais,
+      emisoras,
+      lugarSugerido: this.ciudades.find((c) => c.codigoPais === codigoPais) ?? null,
+      parcial,
+      nota: notaDeNoticias(pais, emisoras.length, parcial),
+    };
+    if (!parcial) this.cache.set(clave, { clase: 'noticias', valor: respuesta });
+    return respuesta;
+  }
+
   /** Una emisora concreta del catálogo, para abrir un enlace compartido. */
   async emisora(uuid: string): Promise<Emisora | undefined> {
     const local = this.emisoraLocal(uuid);
@@ -283,6 +351,16 @@ function notaDeLugar(lugar: Ciudad, verificadas: number, delCatalogo: number, fa
   if (verificadas > 0) partes.push(`${verificadas} comprobadas a mano`);
   if (delCatalogo > 0) partes.push(`${delCatalogo} que el catálogo sitúa en ${lugar.nombre} o su región`);
   return `${partes.join(' y ')}. La ubicación es la que declara el catálogo, no una comprobación nuestra.`;
+}
+
+function notaDeNoticias(pais: string, total: number, parcial: boolean): string {
+  if (total === 0) {
+    return parcial
+      ? `El catálogo no ha respondido del todo para ${pais}. Vuelve a intentarlo en un momento.`
+      : `El catálogo no tiene emisoras informativas de ${pais} que podamos reproducir aquí.`;
+  }
+  const base = `${total} emisoras que el catálogo o su propio nombre presentan como informativas en ${pais}. No están comprobadas una a una.`;
+  return parcial ? `${base} El catálogo ha fallado en parte, así que puede faltar alguna.` : base;
 }
 
 function notaDeBusqueda(total: number, parcial: boolean): string {

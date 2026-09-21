@@ -15,10 +15,11 @@ function ficheroTemporal(contenido: unknown): string {
 }
 
 describe('cargarCiudades', () => {
-  it('carga el índice real con identificadores únicos y coordenadas dentro de rango', () => {
+  it('carga el índice real con identificadores únicos, coordenadas dentro de rango y zona horaria', () => {
     expect(ciudades.length).toBeGreaterThan(50);
     expect(new Set(ciudades.map((c) => c.id)).size).toBe(ciudades.length);
     for (const c of ciudades) {
+      expect(c.zonaHoraria).toMatch(/^[A-Za-z_]+\/[A-Za-z_/]+$/);
       expect(Math.abs(c.coordenadas.lat)).toBeLessThanOrEqual(90);
       expect(Math.abs(c.coordenadas.lng)).toBeLessThanOrEqual(180);
       expect(c.alias.length).toBeGreaterThan(0);
@@ -33,7 +34,18 @@ describe('cargarCiudades', () => {
   });
 
   it('rechaza un índice con entradas mal formadas, versión distinta o identificadores repetidos', () => {
-    const buena = { id: 'x', nombre: 'X', pais: 'P', codigoPais: 'PT', coordenadas: { lat: 1, lng: 2 }, alias: ['x'] };
+    const buena = {
+      id: 'x',
+      nombre: 'X',
+      pais: 'P',
+      codigoPais: 'PT',
+      coordenadas: { lat: 1, lng: 2 },
+      alias: ['x'],
+      zonaHoraria: 'Europe/Lisbon',
+    };
+    expect(() => cargarCiudades(ficheroTemporal({ version: 1, ciudades: [{ ...buena, zonaHoraria: 'Marte/Olympus' }] }))).toThrow(
+      /mal formadas/,
+    );
     expect(() => cargarCiudades(ficheroTemporal({ version: 2, ciudades: [buena] }))).toThrow(/inválido/);
     expect(() => cargarCiudades(ficheroTemporal({ version: 1, ciudades: [{ ...buena, codigoPais: 'PRT' }] }))).toThrow(
       /mal formadas/,
@@ -56,8 +68,16 @@ describe('buscarLugares', () => {
 
   it('prefiere el nombre exacto a una coincidencia parcial', () => {
     const lista: Ciudad[] = [
-      { id: 'lima-otra', nombre: 'Limassol', pais: 'Chipre', codigoPais: 'CY', coordenadas: { lat: 34.7, lng: 33 }, alias: [] },
-      { id: 'lima', nombre: 'Lima', pais: 'Perú', codigoPais: 'PE', coordenadas: { lat: -12, lng: -77 }, alias: [] },
+      {
+        id: 'lima-otra',
+        nombre: 'Limassol',
+        pais: 'Chipre',
+        codigoPais: 'CY',
+        coordenadas: { lat: 34.7, lng: 33 },
+        alias: [],
+        zonaHoraria: 'Asia/Nicosia',
+      },
+      { id: 'lima', nombre: 'Lima', pais: 'Perú', codigoPais: 'PE', coordenadas: { lat: -12, lng: -77 }, alias: [], zonaHoraria: 'America/Lima' },
     ];
     expect(buscarLugares('lima', lista)[0]?.id).toBe('lima');
   });

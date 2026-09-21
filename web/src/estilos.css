@@ -407,7 +407,11 @@ button {
   gap: 8px;
 }
 
-.inicio__sorpresa {
+.inicio__sorpresas {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
   margin-top: 4px;
 }
 
@@ -493,6 +497,68 @@ button {
 .panel__pais {
   margin: 0;
   color: var(--secundario);
+}
+
+.panel__hora {
+  margin: 4px 0 0;
+  color: var(--secundario);
+  font-size: 0.9rem;
+}
+
+/* ---------- Países para noticias ---------- */
+
+.paises__filtro {
+  margin: 0 8px 12px;
+}
+
+.paises__filtro input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--linea);
+  background: var(--superficie);
+}
+
+.paises__filtro input:focus {
+  outline: none;
+  border-color: rgba(242, 203, 87, 0.5);
+}
+
+.paises {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pais {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid transparent;
+  border-radius: var(--radio-pequeno);
+  background: transparent;
+  text-align: left;
+  transition: background-color 160ms ease;
+}
+
+.pais:hover {
+  background: var(--superficie);
+}
+
+.pais__nombre {
+  font-weight: 600;
+}
+
+.pais__cuenta {
+  color: var(--secundario);
+  font-size: 0.8rem;
+  white-space: nowrap;
 }
 
 .panel__estado {
@@ -799,6 +865,41 @@ button {
 .reproductor__pista {
   color: var(--secundario);
   font-size: 0.85rem;
+}
+
+.reproductor__hora,
+.reproductor__dormir {
+  color: var(--secundario);
+}
+
+/* ---------- Temporizador para dormir ---------- */
+
+.temporizador {
+  position: relative;
+  display: inline-flex;
+}
+
+.temporizador .boton-icono[aria-pressed='true'] {
+  border-color: var(--acento);
+  color: var(--acento);
+}
+
+.temporizador__menu {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 8px);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  width: max-content;
+  max-width: 260px;
+  padding: 10px;
+  border-radius: var(--radio);
+  background: var(--superficie-alta);
+  border: 1px solid var(--linea);
+  box-shadow: var(--sombra);
+  z-index: 2;
 }
 
 .reproductor__volumen {

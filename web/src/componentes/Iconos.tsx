@@ -90,6 +90,20 @@ export function IconoCompartir({ tamano = 20 }: Props) {
   );
 }
 
+export function IconoLuna({ tamano = 20 }: Props) {
+  return (
+    <svg viewBox="0 0 24 24" width={tamano} height={tamano} aria-hidden="true" focusable="false">
+      <path
+        d="M14.5 3.5a8.5 8.5 0 1 0 6 14.3A7 7 0 0 1 14.5 3.5z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function IconoLupa({ tamano = 18 }: Props) {
   return (
     <svg viewBox="0 0 24 24" width={tamano} height={tamano} aria-hidden="true" focusable="false">

@@ -9,11 +9,22 @@ export const RUTA_CIUDADES = join(aqui, '..', 'data', 'ciudades.json');
 
 const ID = /^[a-z0-9-]{1,32}$/;
 
+function zonaHorariaValida(valor: unknown): valor is string {
+  if (typeof valor !== 'string' || valor.length === 0) return false;
+  try {
+    new Intl.DateTimeFormat('es', { timeZone: valor });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function esCiudad(valor: unknown): valor is Ciudad {
   if (typeof valor !== 'object' || valor === null) return false;
   const c = valor as Record<string, unknown>;
   const coords = c['coordenadas'] as Record<string, unknown> | undefined;
   return (
+    zonaHorariaValida(c['zonaHoraria']) &&
     typeof c['id'] === 'string' &&
     ID.test(c['id']) &&
     typeof c['nombre'] === 'string' &&

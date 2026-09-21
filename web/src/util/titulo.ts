@@ -1,4 +1,5 @@
 import type { Lugar } from '../tipos';
+import { nombrePais } from './lugar';
 import type { Ruta } from './ruta';
 
 export const TITULO_BASE = 'RadioPirata — ¿Dónde escuchamos hoy?';
@@ -23,6 +24,10 @@ export function nombreDeVista(ruta: Ruta, lugares: Lugar[]): string {
       return 'Recientes';
     case 'emisora':
       return 'Emisora compartida';
+    case 'paises':
+      return 'Noticias del mundo';
+    case 'noticias':
+      return `Noticias de ${nombrePais(ruta.pais, ruta.pais)}`;
   }
 }
 
