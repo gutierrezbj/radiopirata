@@ -31,14 +31,14 @@ Sin defaults genéricos de Tailwind, Shadcn ni Material. Identidad propia del pr
 Explorador de emisoras reales del mundo sobre un globo, para escucharlas con pocos pasos. Para quien vive fuera es la radio local de casa. Producto propio de JuanCho bajo el Manifiesto SDD-JRGB; primer proyecto JRGB puro por el Protocolo de Kickoff.
 
 ### Estado
-Fase 1 en curso. E1 a E4 entregadas (20-21 sep 2026) en `main`. **No publicada**: Servidor 2, offset +240, `radio.jrgblanco.com`; Fase 5 del Kickoff pendiente (ver `docs/DESPLIEGUE.md`). 172 pruebas (83 server, 89 web).
+Fase 1 en curso. E1 a E4 entregadas (20-21 sep 2026) en `main`. **Desplegada en Servidor 2 el 21 sep 2026** (`/opt/apps/radiopirata`, contenedor `radiopirata-web` en 127.0.0.1:3240, vhost nginx en :80, registrada en healthcheck.sh y SA99). **Pendiente**: DNS de `radio.jrgblanco.com` (panel del registrador, lo hace Juan), Certbot y HSTS. Ver `docs/DESPLIEGUE.md`. 172 pruebas (83 server, 89 web).
 
 ### Stack
 React 19 + TypeScript + Vite + Globe.gl (three.js) · Node 22 + Express 5 + TypeScript · Radio Browser como catálogo · **sin base de datos ni cuentas** (ADR-001: favoritas y recientes en `localStorage` versionado) · **un solo proceso** sirve web y API (ADR-002).
 
 ### Infraestructura
 - Offset **+240**: puerto **3240** → contenedor 3001 (web + `/api`). 4240 reservado sin uso.
-- Servidor 2 (187.77.71.102, Tailscale 100.110.52.22), `/opt/apps/radiopirata`, `docker-compose.yml` con `127.0.0.1:3240:3001`.
+- Servidor 2 (187.77.71.102, Tailscale 100.110.52.21, hostname srv1369522), `/opt/apps/radiopirata`, `docker-compose.yml` con `127.0.0.1:3240:3001`.
 - nginx vhost `deploy/nginx-radiopirata.conf` + Certbot. Contenedor `radiopirata-web` a registrar en `healthcheck.sh` y en SA99 (`vps-staging`).
 - Sin secretos. Variables en `.env.example`.
 
@@ -71,7 +71,7 @@ npm run dev                                                                    #
 npm run seleccion:generar && npm run seleccion:verificar                       # selección comprobada (red)
 
 # Servidor 2 (ver docs/DESPLIEGUE.md)
-ssh root@100.110.52.22 && cd /opt/apps/radiopirata && git pull && docker compose up -d --build
+ssh root@100.110.52.21 && cd /opt/apps/radiopirata && git pull && docker compose up -d --build
 docker ps | grep radiopirata && ss -tlnp | grep docker-proxy | grep '0.0.0.0'   # lo segundo, vacío
 curl -s http://127.0.0.1:3240/api/salud
 ```

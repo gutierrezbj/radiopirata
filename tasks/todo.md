@@ -68,8 +68,12 @@ El norte lo puso JuanCho: la radio local de casa para quien vive fuera. Ver `doc
 - [x] Artefactos del Protocolo de Coding Session: `CLAUDE.md` con capa global y de producto, `DESIGN.md`, `tasks/lessons.md`; copia del checklist UX/UI bajo Diseño y página «Lessons Aprendidas» en Notion; entrada v1.5 en el Cuaderno Maestro.
 - [ ] Identity Sprint formal y Distinctiveness Audit (bloquean producción, no el Servidor 2).
 - [x] Dominio `radio.jrgblanco.com` en la tabla de la Sección 7 del Catálogo, como reservado en Servidor 2 (pasar a activo al desplegar).
-- [ ] Fase 5: deploy en Servidor 2, healthcheck.sh, SA99, nginx, certbot, DNS. **Necesita entrar en el servidor.**
-- [ ] Fase 7: tablas del Catálogo y del Manifiesto tras el deploy.
+- [x] Fase 5 (2026-09-21, «dale play» de JuanCho): clonado en `/opt/apps/radiopirata`, imagen construida, contenedor `radiopirata-web` sano en 127.0.0.1:3240, nada en 0.0.0.0, vhost nginx en :80, entrada en healthcheck.sh, registro en SA99. Evidencia en `docs/VERIFICACION-DESPLIEGUE.md`.
+- [ ] DNS A `radio` → 187.77.71.102 en el panel de Hostinger. **Lo hace JuanCho.**
+- [ ] Certbot, bloque 443, `HSTS: "1"` y QA en el dominio real. **Después del DNS.**
+- [x] Fase 7: fila del Servidor 2 en el Catálogo, dominio en la Sección 7, tabla del Manifiesto, checklist y página del proyecto actualizados en Notion.
+- [ ] Ver en el log del healthcheck una pasada con `radiopirata-web` (el log solo resume alertas; hasta ahora `alerts=0`).
+- [ ] `SEED_SERVERS` en `service.py` de SA99: es otro proyecto, queda anotado.
 
 ## E3 — Preparación pública · preparada el 2026-09-21
 - [x] Rendimiento: compresión en el servidor, caché inmutable para ficheros con hash, densidad de píxeles del globo según el equipo y globo que deja de dibujarse cuando nadie lo toca.
@@ -81,8 +85,8 @@ El norte lo puso JuanCho: la radio local de casa para quien vive fuera. Ver `doc
 - [x] Preparar despliegue: Dockerfile, unidad de systemd, configuración de nginx y `docs/DESPLIEGUE.md` con DNS y HTTPS.
 - [ ] Probar en Firefox y Safari, y en un teléfono de verdad.
 - [x] Confirmar alojamiento: **Servidor 2** (decisión de JuanCho, 2026-09-21).
-- [ ] Apuntar `radio.jrgblanco.com` y pedir el certificado. **Necesita entrar en el Servidor 2.**
-- [ ] Publicar cuando lo indique el usuario. **No hecho a propósito.**
+- [ ] Apuntar `radio.jrgblanco.com` (DNS, JuanCho) y pedir el certificado (después).
+- [x] Publicar cuando lo indique el usuario: desplegada en el Servidor 2 el 2026-09-21; visible desde fuera cuando exista el DNS.
 
 ### Arreglado durante E3
 - La política de contenidos bloqueaba los estilos en línea del globo y rompía la información al pasar el ratón. Se abrió `style-src` dejando `script-src` cerrado.

@@ -2,13 +2,15 @@
 
 Reescrito el 2026-09-21 contra el Protocolo de Kickoff y el Catálogo de Infraestructura JRGB de Notion, y con dos decisiones de JuanCho de ese día: va al **Servidor 2** y se registra como proyecto JRGB (cuaderno: Proyecto Radio → Radio Pirata → Radio Pirata 1.0).
 
-**Nada de esto se ha ejecutado todavía.** No se ha entrado en el servidor, no se ha tocado el DNS ni se ha pedido certificado. Docker no está instalado en el Windows de desarrollo, así que la imagen nunca se ha construido: la primera construcción real será en el Servidor 2.
+**Ejecutado el 2026-09-21 hasta donde se puede sin DNS** (ver [VERIFICACION-DESPLIEGUE.md](VERIFICACION-DESPLIEGUE.md)): contenedor construido y sano en el Servidor 2, vhost de nginx en el puerto 80, registro en healthcheck.sh y en SA99. **Pendiente de JuanCho:** el registro A en el panel del registrador de `jrgblanco.com`; después, Certbot y HSTS.
+
+Nota: la IP de Tailscale real de srs-staging es **100.110.52.21** (el protocolo de Notion dice .22).
 
 ## Lo reservado
 
 | | |
 |---|---|
-| Servidor | **Servidor 2** (187.77.71.102, por Tailscale 100.110.52.22). Flujo «Demo/MVP: se queda ahí» |
+| Servidor | **Servidor 2** (187.77.71.102, por Tailscale 100.110.52.21, hostname srv1369522). Flujo «Demo/MVP: se queda ahí» |
 | Offset | **+240** en el Catálogo (Sección 4). Puerto **3240** → contenedor 3001. El 4240 queda sin uso: la API va bajo `/api` en el mismo proceso |
 | Dominio | `radio.jrgblanco.com` |
 | Carpeta | `/opt/apps/radiopirata` |
@@ -23,7 +25,7 @@ Reescrito el 2026-09-21 contra el Protocolo de Kickoff y el Catálogo de Infraes
 ## Fase 5 del Protocolo: deploy en Servidor 2
 
 ```bash
-ssh root@100.110.52.22
+ssh root@100.110.52.21
 cd /opt/apps
 git clone https://github.com/gutierrezbj/radiopirata.git radiopirata
 cd radiopirata
