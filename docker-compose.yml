@@ -1,0 +1,27 @@
+# RadioPirata en la infra JRGB. Puerto según el Catálogo de Infraestructura: offset +240.
+# Un solo contenedor sirve la web y la API bajo el mismo origen; el audio nunca pasa por aquí.
+#
+#   cd /opt/apps/radiopirata && docker compose up -d --build
+#
+# El puerto va atado a 127.0.0.1 como manda la convención: solo nginx lo ve.
+
+services:
+  radiopirata:
+    build: .
+    container_name: radiopirata-web
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3240:3001"
+    environment:
+      PORT: "3001"
+      WEB_DIST: "../web/dist"
+      TRUST_PROXY: "1"
+      # Activar solo cuando radio.jrgblanco.com sirva HTTPS de verdad.
+      HSTS: "0"
+      RADIO_BROWSER_USER_AGENT: "RadioPirata/0.1 (+https://github.com/gutierrezbj/radiopirata)"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3001/api/salud"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3

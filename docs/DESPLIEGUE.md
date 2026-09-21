@@ -1,126 +1,103 @@
-# Desplegar RadioPirata
+# Desplegar RadioPirata en la infra JRGB
 
-Preparado el 2026-09-21. **Nada de esto se ha ejecutado contra un servidor real**: no hay alojamiento elegido ni acceso a ninguna máquina. Son las instrucciones para cuando JuanCho decida dónde va y dé la indicación de publicar.
+Reescrito el 2026-09-21 contra el Protocolo de Kickoff y el Catálogo de Infraestructura JRGB de Notion, y con dos decisiones de JuanCho de ese día: va al **Servidor 2** y se registra como proyecto JRGB (cuaderno: Proyecto Radio → Radio Pirata → Radio Pirata 1.0).
 
-## Qué hace falta
+**Nada de esto se ha ejecutado todavía.** No se ha entrado en el servidor, no se ha tocado el DNS ni se ha pedido certificado. Docker no está instalado en el Windows de desarrollo, así que la imagen nunca se ha construido: la primera construcción real será en el Servidor 2.
+
+## Lo reservado
 
 | | |
 |---|---|
-| Node | 22.12 o superior (probado con 22.15) |
-| Memoria | el proceso ronda los 100 MB; con 512 MB sobra |
-| Disco | menos de 300 MB con dependencias de ejecución |
-| Base de datos | ninguna |
-| Secretos | ninguno: no hay cuentas ni claves |
-| Salida a internet | HTTPS hacia `*.api.radio-browser.info` y resolución DNS de registros SRV para `_api._tcp.radio-browser.info` |
-| Entrada | un puerto HTTP (3001 por defecto) detrás de un proxy con HTTPS |
+| Servidor | **Servidor 2** (187.77.71.102, por Tailscale 100.110.52.22). Flujo «Demo/MVP: se queda ahí» |
+| Offset | **+240** en el Catálogo (Sección 4). Puerto **3240** → contenedor 3001. El 4240 queda sin uso: la API va bajo `/api` en el mismo proceso |
+| Dominio | `radio.jrgblanco.com` |
+| Carpeta | `/opt/apps/radiopirata` |
+| Contenedor | `radiopirata-web` (definido en `docker-compose.yml`) |
 
-El audio **no pasa por el servidor**: va del servidor de cada emisora al navegador. Por eso el ancho de banda del alojamiento no depende de cuánta gente esté escuchando, solo de las consultas al catálogo, que además van con caché.
+## Qué necesita
 
-## Un solo proceso
+- Salida HTTPS hacia `*.api.radio-browser.info` y resolución DNS de `_api._tcp.radio-browser.info` (SRV).
+- Unos 100 MB de memoria y menos de 300 MB de disco. Sin base de datos, sin secretos.
+- El audio **no pasa por el servidor**: va de cada emisora al navegador. El ancho de banda del VPS no depende de la audiencia.
 
-`npm start` levanta la API y sirve la web compilada desde el mismo origen. No hay dos servicios que coordinar ni CORS que configurar.
+## Fase 5 del Protocolo: deploy en Servidor 2
 
 ```bash
-npm ci --omit=dev
-npm run build
-npm start
+ssh root@100.110.52.22
+cd /opt/apps
+git clone https://github.com/gutierrezbj/radiopirata.git radiopirata
+cd radiopirata
+docker compose up -d --build
 ```
 
-`npm run build` necesita las dependencias de desarrollo, así que en una máquina de producción lo normal es construir con todas (`npm ci`), construir y luego podar (`npm prune --omit=dev`), o construir la imagen Docker que ya hace ese reparto.
-
-## Variables
-
-Todas están en [.env.example](../.env.example) y ninguna es secreta. Las que importan al desplegar:
-
-| Variable | Para qué |
-|---|---|
-| `PORT` | puerto de escucha |
-| `WEB_DIST` | ruta al build de la web, relativa al directorio de trabajo del proceso |
-| `TRUST_PROXY` | número de proxies por delante; con nginx delante, `1` |
-| `HSTS` | `1` solo cuando el dominio ya sirva HTTPS correctamente |
-| `RADIO_BROWSER_USER_AGENT` | identificador que pide la documentación de Radio Browser |
-
-**Cuidado con `HSTS`.** Activarlo antes de tener el certificado deja a los navegadores obligados a usar HTTPS durante un año, y si el certificado no está, no se puede entrar. Se activa después de comprobar que HTTPS funciona.
-
-## Opción A — systemd y nginx
-
-1. Crear un usuario sin shell y colocar el repositorio en `/srv/radiopirata`.
-2. Construir dentro: `npm ci && npm run build && npm prune --omit=dev`.
-3. Copiar `.env.example` a `/srv/radiopirata/.env` y ajustar `TRUST_PROXY=1`.
-4. Instalar [deploy/radiopirata.service](../deploy/radiopirata.service) en `/etc/systemd/system/`, recargar y arrancar.
-5. Instalar [deploy/nginx-radiopirata.conf](../deploy/nginx-radiopirata.conf), de momento **solo el bloque del puerto 80**, y recargar nginx.
-
-Comprobación antes de seguir:
+Comprobar, en este orden:
 
 ```bash
-curl -s http://127.0.0.1:3001/api/salud
-```
-
-Debe responder `{"ok":true,...}` con el número de destinos y de lugares.
-
-## Opción B — Docker
-
-```bash
-docker build -t radiopirata .
+docker ps | grep radiopirata
 ```
 
 ```bash
-docker run -d --name radiopirata -p 127.0.0.1:3001:3001 -e TRUST_PROXY=1 --restart unless-stopped radiopirata
+ss -tlnp | grep docker-proxy | grep '0.0.0.0'
 ```
 
-La imagen trae comprobación de salud propia, corre como usuario sin privilegios y recibe `SIGTERM` directamente, así que `docker stop` cierra las conexiones abiertas en vez de cortarlas.
-
-## DNS
-
-El dominio previsto es `radio.jrgblanco.com`. Hace falta **un registro A** apuntando a la IP pública del servidor, y un **AAAA** si la máquina tiene IPv6.
-
-| Tipo | Nombre | Valor | TTL |
-|---|---|---|---|
-| A | `radio` | IP pública del servidor | 300 mientras se prueba, luego 3600 |
-| AAAA | `radio` | IPv6 del servidor, si la hay | igual que el A |
-
-Un TTL bajo durante las pruebas permite corregir rápido; se sube cuando todo esté estable.
-
-Comprobar antes de pedir el certificado, porque Let's Encrypt validará por HTTP contra esa IP:
+Lo segundo **debe estar vacío**: el puerto va atado a `127.0.0.1`.
 
 ```bash
-dig +short radio.jrgblanco.com A
+curl -s http://127.0.0.1:3240/api/salud
 ```
 
-## HTTPS
+Debe responder `{"ok":true,"destinos":3,"lugares":72}`.
 
-Con el DNS resuelto y nginx sirviendo el puerto 80:
+## nginx y HTTPS
 
-```bash
-sudo certbot --nginx -d radio.jrgblanco.com
+1. Copiar [deploy/nginx-radiopirata.conf](../deploy/nginx-radiopirata.conf) a `/etc/nginx/sites-available/radiopirata`, enlazar en `sites-enabled` y dejar **solo el bloque del puerto 80** hasta tener certificado. `nginx -t` y `systemctl reload nginx`.
+2. DNS en el panel del registrador de `jrgblanco.com`: registro **A** `radio` → `187.77.71.102`, TTL 300 mientras se prueba. Comprobar con `dig +short radio.jrgblanco.com A`.
+3. `certbot --nginx -d radio.jrgblanco.com`. Activar el bloque 443 y recargar.
+4. Comprobar desde fuera `https://radio.jrgblanco.com/api/salud`.
+5. Solo entonces, `HSTS: "1"` en `docker-compose.yml` y `docker compose up -d`.
+
+El nginx compartido del VPS ya aplica gzip y brotli a todos los vhosts (estándar JRGB); la aplicación además comprime por sí misma. Endpoint más pesado: el trozo del globo, de 1 946 kB a 550 kB. La página de inicio son 82 kB transferidos.
+
+## Registro obligatorio (sin esto, «no existe»)
+
+- **healthcheck.sh** (`/opt/scripts/healthcheck.sh`): añadir el contenedor `radiopirata-web`. Esperar cinco minutos y confirmar que no aparece en «Sistema».
+- **SA99 InfraService** (servidor `vps-staging`):
+
+```javascript
+db.servers.updateOne(
+  { _id: "vps-staging" },
+  { $set: { "projects.RadioPirata": { containers: ["radiopirata-web"], domain: "radio.jrgblanco.com" } } }
+);
 ```
 
-Certbot escribe los certificados y añade la configuración TLS. Después:
+Y actualizar `SEED_SERVERS` en `service.py` del repo SA99 para despliegues desde cero.
 
-1. Activar el bloque `443` de la configuración de nginx y recargar.
-2. Comprobar `https://radio.jrgblanco.com/api/salud` desde fuera.
-3. Solo entonces, poner `HSTS=1` en el `.env` y reiniciar el servicio.
-
-La renovación la hace el temporizador de certbot; conviene comprobarla una vez con `sudo certbot renew --dry-run`.
-
-## Cabeceras que ya envía la aplicación
-
-No hace falta añadirlas en nginx; el propio servidor manda `Content-Security-Policy`, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy` y `Cross-Origin-Opener-Policy`. La política de contenidos permite audio desde cualquier origen HTTPS, que es justo lo que necesita una radio, y nada más de fuera.
+- **Catálogo de Infraestructura**: Sección 2 (tabla de proyectos del Servidor 2) y Sección 7 (dominios). La Sección 4 ya tiene el +240.
 
 ## Actualizar y volver atrás
 
-Cada versión es un commit. Para actualizar: traer el commit, construir, reiniciar el servicio. Para volver atrás: `git checkout <commit anterior>`, construir y reiniciar. Los ficheros de la web llevan un hash en el nombre y se cachean un año; `index.html` no se cachea, así que el cambio se ve de inmediato sin que nadie tenga que vaciar nada.
+```bash
+cd /opt/apps/radiopirata && git pull && docker compose up -d --build
+```
 
-## Qué vigilar
+Volver atrás es `git checkout <commit anterior>` y el mismo comando. No hay datos que restaurar: el estado vive en el navegador de cada persona. **Tras cada build hay que reiniciar el contenedor**: el servidor lee `index.html` una sola vez al arrancar.
 
-- `GET /api/salud` para la comprobación de vida.
-- Los registros del proceso: cuando Radio Browser falla, la aplicación lo dice en la respuesta y sigue sirviendo lo comprobado a mano.
-- Si el catálogo estuviera caído mucho tiempo, las ciudades aparecerían con pocas emisoras o vacías. No es un fallo del servidor.
+## Alternativa sin Docker
 
-## Lo que no está decidido ni hecho
+[deploy/radiopirata.service](../deploy/radiopirata.service) es una unidad de systemd para una máquina con Node 22 y sin Docker. En la infra JRGB no hace falta: allí todo va en Compose.
 
-- **No hay alojamiento elegido.** No se ha contratado nada ni se ha entrado en ninguna máquina.
-- **No se ha tocado el DNS** de `jrgblanco.com`.
-- **No se ha publicado.** Hace falta la indicación expresa de JuanCho.
-- No hay copias de seguridad que planear: el estado vive en el navegador de cada persona.
-- No se ha medido el consumo con tráfico real, porque no ha habido tráfico real.
+## Verificación final
+
+```bash
+ss -tlnp | grep docker-proxy | grep '0.0.0.0'
+```
+
+```bash
+curl -s -o /dev/null -w '%{http_code}' https://radio.jrgblanco.com/
+```
+
+```bash
+docker ps | grep radiopirata
+```
+
+Y el recorrido a mano en el dominio real: inicio → Caracas → una emisora suena → cambiar de ciudad sin que se corte → enlace compartido pegado en WhatsApp muestra el nombre de la emisora.

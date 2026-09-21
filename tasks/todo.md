@@ -59,6 +59,16 @@ El norte lo puso JuanCho: la radio local de casa para quien vive fuera. Ver `doc
 - [ ] Imagen de la tarjeta (1200×630): falta un diseño; no se improvisa.
 - [ ] Escuchar una a una las emisoras informativas de Venezuela.
 
+## Registro JRGB y despliegue · decidido el 2026-09-21
+- [x] Leer Notion: Protocolo de Kickoff, Catálogo de Infraestructura y Manifiesto SDD-JRGB.
+- [x] Decisiones de JuanCho: Servidor 2; registrar como proyecto JRGB.
+- [x] Página «Radio Pirata 1.0» en Notion bajo Proyecto Radio → Radio Pirata, con SDD-01..08, subcarpetas y copia del checklist.
+- [x] Offset +240 reservado en el Catálogo (Sección 4); siguiente libre +250.
+- [x] `docker-compose.yml` (127.0.0.1:3240:3001), `CLAUDE.md`, nginx a 3240, `docs/DESPLIEGUE.md` reescrita contra la infra real.
+- [ ] Dominio `radio.jrgblanco.com` en la tabla de la Sección 7 del Catálogo (al desplegar).
+- [ ] Fase 5: deploy en Servidor 2, healthcheck.sh, SA99, nginx, certbot, DNS. **Necesita entrar en el servidor.**
+- [ ] Fase 7: tablas del Catálogo y del Manifiesto tras el deploy.
+
 ## E3 — Preparación pública · preparada el 2026-09-21
 - [x] Rendimiento: compresión en el servidor, caché inmutable para ficheros con hash, densidad de píxeles del globo según el equipo y globo que deja de dibujarse cuando nadie lo toca.
 - [x] Medir lo que se descarga de verdad: 82 kB en el inicio; el globo son otros 550 kB y solo los paga quien entra al explorador.
