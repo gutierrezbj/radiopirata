@@ -9,7 +9,7 @@ Frases de inicio:
 - «La música siempre es buena compañía.»
 
 Nombre: RadioPirata.
-Dominio previsto: radio.jrgblanco.com; no está configurado por este encargo.
+Dominio previsto: radiopirata.jrgblanco.com; no está configurado por este encargo.
 
 ## 2. Alcance y entregas
 
@@ -114,7 +114,7 @@ No garantizar reproducción en segundo plano en todos los móviles sin pruebas.
 ## 8. Despliegue
 Preparar la aplicación para servir web y API juntas en un servidor Node. El alojamiento concreto sigue pendiente; no asumir acceso al VPS del usuario.
 Mantener configuración mediante variables documentadas en .env.example sin valores secretos.
-Tras validación, acordar destino y conectar radio.jrgblanco.com con HTTPS.
+Tras validación, acordar destino y conectar radiopirata.jrgblanco.com con HTTPS.
 No anunciar costes, fecha de entrega o disponibilidad pública como confirmados sin evidencia.
 
 ## 9. Referencias

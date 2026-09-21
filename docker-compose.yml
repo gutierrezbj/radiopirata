@@ -16,7 +16,7 @@ services:
       PORT: "3001"
       WEB_DIST: "../web/dist"
       TRUST_PROXY: "1"
-      # Activar solo cuando radio.jrgblanco.com sirva HTTPS de verdad.
+      # Activar solo cuando radiopirata.jrgblanco.com sirva HTTPS de verdad.
       HSTS: "0"
       RADIO_BROWSER_USER_AGENT: "RadioPirata/0.1 (+https://github.com/gutierrezbj/radiopirata)"
     healthcheck:

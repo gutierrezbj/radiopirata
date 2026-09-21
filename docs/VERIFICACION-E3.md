@@ -97,7 +97,7 @@ El verde solo aparece con reproducción efectiva, igual que el «En directo», a
 
 - **Docker no está instalado en este equipo**, así que el `Dockerfile` está escrito pero **no se ha construido ni ejecutado nunca**.
 - **Los ficheros de systemd y nginx no se han aplicado a ningún servidor.** No hay alojamiento elegido ni acceso a ninguna máquina.
-- **No se ha tocado el DNS** ni se ha pedido ningún certificado. `radio.jrgblanco.com` sigue sin apuntar a nada nuestro.
+- **No se ha tocado el DNS** ni se ha pedido ningún certificado. `radiopirata.jrgblanco.com` sigue sin apuntar a nada nuestro.
 - **No se ha publicado nada.**
 - **Activación con teclado**: se comprobó el orden de tabulación y el movimiento del foco, pero la automatización de este navegador no dispara la activación por Enter o Espacio en botones nativos, así que no llegué a observarla. Los controles son elementos `<button>` normales, de modo que la activación es la del propio navegador, pero **no la he visto funcionar con mis propios ojos** y queda pendiente de una prueba manual.
 - **Solo Chromium en Windows.** Siguen sin probarse Firefox, Safari, iOS, Android y cualquier teléfono físico.

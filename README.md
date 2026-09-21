@@ -16,7 +16,7 @@ La música siempre es buena compañía.
 - Cómo desplegarla: [docs/DESPLIEGUE.md](docs/DESPLIEGUE.md).
 - Evidencia: [E1](docs/VERIFICACION-E1.md), [E2](docs/VERIFICACION-E2.md), [E3](docs/VERIFICACION-E3.md) y [E4](docs/VERIFICACION-E4.md).
 - Sincronización de la carpeta local: [docs/SINCRONIZACION.md](docs/SINCRONIZACION.md).
-- Repositorio: https://github.com/gutierrezbj/radiopirata · Destino previsto: `radio.jrgblanco.com` (pendiente de configurar).
+- Repositorio: https://github.com/gutierrezbj/radiopirata · Destino previsto: `radiopirata.jrgblanco.com` (pendiente de configurar).
 
 ## Requisitos
 

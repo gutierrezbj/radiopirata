@@ -12,7 +12,7 @@ Nota: la IP de Tailscale real de srs-staging es **100.110.52.21** (el protocolo 
 |---|---|
 | Servidor | **Servidor 2** (187.77.71.102, por Tailscale 100.110.52.21, hostname srv1369522). Flujo «Demo/MVP: se queda ahí» |
 | Offset | **+240** en el Catálogo (Sección 4). Puerto **3240** → contenedor 3001. El 4240 queda sin uso: la API va bajo `/api` en el mismo proceso |
-| Dominio | `radio.jrgblanco.com` |
+| Dominio | `radiopirata.jrgblanco.com` |
 | Carpeta | `/opt/apps/radiopirata` |
 | Contenedor | `radiopirata-web` (definido en `docker-compose.yml`) |
 
@@ -53,9 +53,9 @@ Debe responder `{"ok":true,"destinos":3,"lugares":72}`.
 ## nginx y HTTPS
 
 1. Copiar [deploy/nginx-radiopirata.conf](../deploy/nginx-radiopirata.conf) a `/etc/nginx/sites-available/radiopirata`, enlazar en `sites-enabled` y dejar **solo el bloque del puerto 80** hasta tener certificado. `nginx -t` y `systemctl reload nginx`.
-2. DNS en el panel del registrador de `jrgblanco.com`: registro **A** `radio` → `187.77.71.102`, TTL 300 mientras se prueba. Comprobar con `dig +short radio.jrgblanco.com A`.
-3. `certbot --nginx -d radio.jrgblanco.com`. Activar el bloque 443 y recargar.
-4. Comprobar desde fuera `https://radio.jrgblanco.com/api/salud`.
+2. DNS en el panel del registrador de `jrgblanco.com`: registro **A** `radio` → `187.77.71.102`, TTL 300 mientras se prueba. Comprobar con `dig +short radiopirata.jrgblanco.com A`.
+3. `certbot --nginx -d radiopirata.jrgblanco.com`. Activar el bloque 443 y recargar.
+4. Comprobar desde fuera `https://radiopirata.jrgblanco.com/api/salud`.
 5. Solo entonces, `HSTS: "1"` en `docker-compose.yml` y `docker compose up -d`.
 
 El nginx compartido del VPS ya aplica gzip y brotli a todos los vhosts (estándar JRGB); la aplicación además comprime por sí misma. Endpoint más pesado: el trozo del globo, de 1 946 kB a 550 kB. La página de inicio son 82 kB transferidos.
@@ -68,7 +68,7 @@ El nginx compartido del VPS ya aplica gzip y brotli a todos los vhosts (estánda
 ```javascript
 db.servers.updateOne(
   { _id: "vps-staging" },
-  { $set: { "projects.RadioPirata": { containers: ["radiopirata-web"], domain: "radio.jrgblanco.com" } } }
+  { $set: { "projects.RadioPirata": { containers: ["radiopirata-web"], domain: "radiopirata.jrgblanco.com" } } }
 );
 ```
 
@@ -95,7 +95,7 @@ ss -tlnp | grep docker-proxy | grep '0.0.0.0'
 ```
 
 ```bash
-curl -s -o /dev/null -w '%{http_code}' https://radio.jrgblanco.com/
+curl -s -o /dev/null -w '%{http_code}' https://radiopirata.jrgblanco.com/
 ```
 
 ```bash
