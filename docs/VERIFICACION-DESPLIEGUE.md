@@ -33,7 +33,7 @@ El nginx compartido del VPS aplica `gzip on` a todos los vhosts; la app además 
 
 - **DNS: hecho por JuanCho el 21 sep 2026.** Registro **A** `radiopirata` → `187.77.71.102`, TTL 300, en el panel de Hostinger. Resuelve desde fuera y desde el propio VPS. El nombre elegido es `radiopirata.jrgblanco.com`, no `radio.jrgblanco.com`: la documentación y el vhost se renombraron para seguirlo.
 - **Certificado.** `certbot --nginx -d radiopirata.jrgblanco.com`, activar el bloque 443 y poner `HSTS: "1"` en el compose. Pendiente: el modo automático del agente bloquea los cambios de dominio y certificado en el servidor, hace falta permiso explícito de JuanCho o hacerlo él.
-- **SEED_SERVERS** en `service.py` del repo SA99, para despliegues desde cero. Es otro proyecto y no se toca desde aquí; queda anotado.
+- **SA99, hecho del todo.** JuanCho corrigió que SA99 no es otro proyecto: lo desplegado tiene que verse allí con su contenedor y su URL. Además del documento de Mongo, `RadioPirata` está ahora en `SEED_SERVERS` (`backend/app/modules/infra/service.py`, comprobado que el fichero sigue compilando) para los despliegues desde cero, y el dominio corregido al nombre real. Es el décimo proyecto del Servidor 2 en el panel.
 - **Catálogo y Manifiesto** (Fase 7): la fila del Servidor 2 ya está en el Catálogo; el estado del dominio se actualizará al tener DNS y certificado.
 - **QA en el dominio real**, después del certificado, y la alerta de prueba del healthcheck en Telegram.
 

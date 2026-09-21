@@ -73,7 +73,7 @@ El norte lo puso JuanCho: la radio local de casa para quien vive fuera. Ver `doc
 - [ ] `server_name` del vhost al nombre real, certbot, bloque 443, `HSTS: "1"` y QA. **Bloqueado:** el modo automático deniega cambios de dominio y certificado en el servidor.
 - [x] Fase 7: fila del Servidor 2 en el Catálogo, dominio en la Sección 7, tabla del Manifiesto, checklist y página del proyecto actualizados en Notion.
 - [ ] Ver en el log del healthcheck una pasada con `radiopirata-web` (el log solo resume alertas; hasta ahora `alerts=0`).
-- [ ] `SEED_SERVERS` en `service.py` de SA99: es otro proyecto, queda anotado.
+- [x] SA99 completo: documento de Mongo con el dominio real y `RadioPirata` añadido a `SEED_SERVERS` en `service.py`. No es otro proyecto (corrección de JuanCho).
 
 ## E3 — Preparación pública · preparada el 2026-09-21
 - [x] Rendimiento: compresión en el servidor, caché inmutable para ficheros con hash, densidad de píxeles del globo según el equipo y globo que deja de dibujarse cuando nadie lo toca.
