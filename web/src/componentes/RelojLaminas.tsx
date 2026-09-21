@@ -61,10 +61,7 @@ export function RelojLaminas({ hora, etiqueta, detalle = null }: PropsReloj) {
   const digitos = digitosDeHora(hora);
   return (
     <div className="reloj-bloque">
-      <p className="reloj-bloque__etiqueta">
-        {etiqueta}
-        {detalle && <span className="reloj-bloque__detalle">, {detalle}</span>}
-      </p>
+      <p className="reloj-bloque__etiqueta">{etiqueta}</p>
       <div className="reloj">
         {digitos.map((d, i) => (
           <span key={i} className="reloj__grupo">
@@ -73,6 +70,7 @@ export function RelojLaminas({ hora, etiqueta, detalle = null }: PropsReloj) {
           </span>
         ))}
       </div>
+      {detalle && <p className="reloj-bloque__detalle">{detalle}</p>}
     </div>
   );
 }
@@ -103,7 +101,7 @@ export function RelojesAlliAqui({ zona, nombreLugar }: PropsAlliAqui) {
   return (
     <div className="relojes" role="group" aria-label={`${frase ?? `Allí son las ${alli}.`} Aquí son las ${aqui}.`}>
       <RelojLaminas hora={alli} etiqueta={`Allí, en ${nombreLugar}`} detalle={momento} />
-      <RelojLaminas hora={aqui} etiqueta="Aquí" />
+      <RelojLaminas hora={aqui} etiqueta="Aquí" detalle="donde tú estás" />
     </div>
   );
 }

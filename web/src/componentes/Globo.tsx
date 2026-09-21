@@ -95,7 +95,8 @@ export function Globo({ lugares, lugarEnfocado, emisoras, alElegirLugar, alPasar
       .showPointerCursor((tipo, datos) => tipo === 'label' || (tipo === 'point' && (datos as Punto).tipo === 'lugar'))
       .labelLat((d) => (d as Lugar).coordenadas.lat)
       .labelLng((d) => (d as Lugar).coordenadas.lng)
-      .labelText((d) => (d as Lugar).nombre)
+      // La fuente que usa la librería para las etiquetas no tiene acentos y pinta «M?xico».
+      .labelText((d) => sinAcentos((d as Lugar).nombre))
       .labelSize(1.1)
       .labelDotRadius(0)
       .labelColor(() => '#F5F0E6')
@@ -260,6 +261,10 @@ function etiquetaDePunto(punto: Punto): string {
   return punto.tipo === 'lugar'
     ? `<div class="globo__etiqueta">${escapar(punto.lugar.nombre)}<small>${escapar(punto.lugar.pais)}</small></div>`
     : `<div class="globo__etiqueta">${escapar(punto.emisora.nombre)}<small>según el catálogo</small></div>`;
+}
+
+function sinAcentos(texto: string): string {
+  return texto.normalize('NFD').replace(/[̀-ͯ]/g, '');
 }
 
 function escapar(texto: string): string {
