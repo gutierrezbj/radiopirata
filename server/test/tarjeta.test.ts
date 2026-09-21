@@ -57,8 +57,23 @@ describe('inyectarTarjeta', () => {
     expect(html).toContain('<meta name="description" content="Emisoras de Caracas." />');
     expect(html).toContain('<meta property="og:title" content="Caracas · RadioPirata" />');
     expect(html).toContain('<meta property="og:url" content="https://radio.test/?lugar=caracas" />');
-    expect(html).toContain('<meta name="twitter:card" content="summary" />');
+    expect(html).toContain('<meta name="twitter:card" content="summary_large_image" />');
     expect(html.indexOf('og:title')).toBeLessThan(html.indexOf('</head>'));
+  });
+
+  it('apunta a la imagen de la tarjeta con dirección absoluta y su tamaño', () => {
+    const html = inyectarTarjeta(plantilla, TARJETA_BASE, 'https://radio.test/?lugar=caracas');
+    expect(html).toContain('<meta property="og:image" content="https://radio.test/tarjeta.png" />');
+    expect(html).toContain('<meta property="og:image:secure_url" content="https://radio.test/tarjeta.png" />');
+    expect(html).toContain('<meta property="og:image:width" content="1200" />');
+    expect(html).toContain('<meta property="og:image:height" content="630" />');
+    expect(html).toContain('<meta property="og:image:type" content="image/png" />');
+    expect(html).toContain('og:image:alt');
+  });
+
+  it('no rompe el HTML si la dirección no se puede interpretar', () => {
+    const html = inyectarTarjeta(plantilla, TARJETA_BASE, 'esto-no-es-una-url');
+    expect(html).toContain('<meta property="og:image" content="/tarjeta.png" />');
   });
 
   it('escapa lo que venga de fuera para que no rompa el HTML', () => {

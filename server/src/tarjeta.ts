@@ -61,19 +61,47 @@ function escapar(valor: string): string {
   return valor.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] ?? c);
 }
 
+/**
+ * La imagen de la tarjeta. WhatsApp y compañía piden una dirección absoluta y
+ * no siguen enlaces relativos, así que se arma con el origen de la petición.
+ */
+export const IMAGEN_TARJETA = {
+  ruta: '/tarjeta.png',
+  ancho: 1200,
+  alto: 630,
+  alternativo: 'RadioPirata: ¿Dónde escuchamos hoy? Emisoras reales del mundo, en directo.',
+} as const;
+
+function origenDe(url: string): string {
+  try {
+    return new URL(url).origin;
+  } catch {
+    return '';
+  }
+}
+
 /** Cambia el título y añade las etiquetas Open Graph justo antes de cerrar `<head>`. */
 export function inyectarTarjeta(html: string, tarjeta: Tarjeta, url: string): string {
   const titulo = escapar(tarjeta.titulo);
   const descripcion = escapar(tarjeta.descripcion);
+  const imagen = escapar(`${origenDe(url)}${IMAGEN_TARJETA.ruta}`);
   const etiquetas = [
     `<meta property="og:type" content="website" />`,
     `<meta property="og:site_name" content="RadioPirata" />`,
+    `<meta property="og:locale" content="es_ES" />`,
     `<meta property="og:title" content="${titulo}" />`,
     `<meta property="og:description" content="${descripcion}" />`,
     `<meta property="og:url" content="${escapar(url)}" />`,
-    `<meta name="twitter:card" content="summary" />`,
+    `<meta property="og:image" content="${imagen}" />`,
+    `<meta property="og:image:secure_url" content="${imagen}" />`,
+    `<meta property="og:image:type" content="image/png" />`,
+    `<meta property="og:image:width" content="${IMAGEN_TARJETA.ancho}" />`,
+    `<meta property="og:image:height" content="${IMAGEN_TARJETA.alto}" />`,
+    `<meta property="og:image:alt" content="${escapar(IMAGEN_TARJETA.alternativo)}" />`,
+    `<meta name="twitter:card" content="summary_large_image" />`,
     `<meta name="twitter:title" content="${titulo}" />`,
     `<meta name="twitter:description" content="${descripcion}" />`,
+    `<meta name="twitter:image" content="${imagen}" />`,
   ].join('\n    ');
   return html
     .replace(/<title>[^<]*<\/title>/, `<title>${titulo}</title>`)
