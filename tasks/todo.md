@@ -66,6 +66,9 @@
 - El encabezado decía «Cargando…» mientras mostraba el error de un lugar desconocido.
 - Al entrar al explorador desde el inicio, el foco caía al cuerpo del documento.
 
+### Añadido a petición de JuanCho (2026-09-21)
+- [x] Dial de sintonía: anillo alrededor del botón de reproducir que va de rojo a ámbar y a verde según entra la señal. Se apoya en `readyState` del elemento de audio, no en una animación inventada. Comprobados los cuatro estados en el navegador.
+
 ### Sin comprobar en E3
 - Docker no está instalado en este equipo: el `Dockerfile` está escrito pero nunca se ha construido.
 - Los ficheros de systemd y nginx no se han aplicado a ninguna máquina.

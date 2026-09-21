@@ -76,7 +76,7 @@ Sondea cada emisora por HTTP con User-Agent de navegador y actualiza `docs/VERIF
 | Comprobación | Resultado |
 |---|---|
 | `npm run typecheck` | sin errores (server y web) |
-| `npm test` | 64 pruebas en server, 58 en web, todas en verde |
+| `npm test` | 64 pruebas en server, 68 en web, todas en verde |
 | `npm run build` | correcto |
 | Peso de la página de inicio | 82 kB transferidos; el globo son otros 550 kB que solo se cargan al entrar al explorador |
 | Contraste del tema | mínimo 6,6:1, muy por encima del 4,5:1 exigible |
@@ -93,6 +93,7 @@ Detalle y limitaciones: [docs/VERIFICACION-E3.md](docs/VERIFICACION-E3.md). Lo q
 - **Filtrar por estilo** dentro de la lista que se está viendo. Solo se ofrecen los estilos que agrupan más de una emisora.
 - **Guardar favoritas y ver recientes**, que se quedan en el navegador del dispositivo.
 - **Compartir una emisora** con un enlace `?emisora=<id>` que abre su ficha.
+- **Ver la sintonía**: un anillo alrededor del botón de reproducir que va de rojo a ámbar y a verde según entra la señal, como el dial de una radio. No es decoración: sale de `readyState`, que es lo que el navegador sabe sobre cuánto audio tiene ya listo. Si la señal falla, el anillo se cierra entero en rojo.
 - **Pasar a la anterior o la siguiente** de la lista desde la que se eligió lo que suena.
 - **Sorpréndeme**: una ciudad al azar del índice y una emisora al azar de esa ciudad.
 

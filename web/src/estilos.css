@@ -7,6 +7,10 @@
   --acento: #f2cb57;
   --acento-texto: #121416;
   --linea: rgba(245, 240, 230, 0.1);
+  /* Sintonía: de «no llega nada» a «está sonando». Nunca son el único indicador. */
+  --senal-mala: #e2674e;
+  --senal-media: #f0a44e;
+  --senal-buena: #7fd39a;
   --radio: 16px;
   --radio-pequeno: 10px;
   --fuente: 'Segoe UI Variable Text', 'Segoe UI', system-ui, 'Noto Sans', 'Helvetica Neue', Arial, sans-serif;
@@ -723,7 +727,7 @@ button {
 
 .reproductor__estado--playing::before {
   content: '● ';
-  color: #7fd39a;
+  color: var(--senal-buena);
 }
 
 .reproductor__estado--error {
@@ -736,6 +740,53 @@ button {
   align-items: center;
   justify-content: center;
   gap: 10px;
+}
+
+/* ---------- Dial de sintonía ---------- */
+
+.dial {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  flex: 0 0 auto;
+}
+
+.dial__anillo {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.dial__pista {
+  fill: none;
+  stroke: rgba(245, 240, 230, 0.12);
+  stroke-width: 3;
+}
+
+.dial__arco {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  transition: stroke-dasharray 450ms ease, stroke 450ms ease;
+}
+
+.dial__arco--nula,
+.dial__arco--debil {
+  stroke: var(--senal-mala);
+}
+
+.dial__arco--media {
+  stroke: var(--senal-media);
+}
+
+.dial__arco--buena {
+  stroke: var(--senal-buena);
+}
+
+.dial__arco--quieta {
+  stroke: var(--secundario);
 }
 
 .reproductor__extras {

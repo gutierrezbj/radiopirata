@@ -79,7 +79,7 @@ export function ListaEmisoras({
 function textoEstado(estado: EstadoReproduccion): string | null {
   switch (estado) {
     case 'loading':
-      return 'Conectando…';
+      return 'Sintonizando…';
     case 'playing':
       return 'En directo';
     case 'paused':

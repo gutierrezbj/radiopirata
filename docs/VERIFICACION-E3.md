@@ -74,6 +74,25 @@ La política de contenidos con `style-src 'self'` bloqueaba los estilos que la l
 
 También se corrigió que el encabezado dijera «Cargando…» mientras mostraba un error de lugar desconocido, y que el foco cayera al cuerpo del documento al llegar al explorador desde el inicio.
 
+## Añadido después: dial de sintonía
+
+Idea de JuanCho el 2026-09-21: un círculo que se ponga verde a medida que la emisora «sintoniza». Se implementó como un anillo alrededor del botón de reproducir.
+
+La pregunta importante era de dónde sacar el color sin inventarlo. La respuesta es `readyState` del elemento de audio, que es lo que el propio navegador sabe sobre cuánto audio tiene ya listo para sonar: 0 es que no llega nada y 4 es que va sobrado. Con eso la aguja sube sola mientras conecta, sin simular nada.
+
+| Estado real | Anillo | Texto del reproductor |
+|---|---|---|
+| Conectando, sin datos aún | rojo, arco corto | «Sintonizando…» |
+| Llegan metadatos | rojo, arco algo mayor | «Sintonizando…» |
+| Hay audio suficiente | ámbar | «Sintonizando…» |
+| Sonando de verdad | verde, anillo completo | «En directo» |
+| En pausa | gris, medio anillo | «En pausa» |
+| Señal caída o formato imposible | rojo, anillo completo | el mensaje del fallo |
+
+Comprobado en el navegador con el build de producción: al pulsar TSF el anillo pasó de rojo con arco corto a verde completo al empezar a sonar; con Free FM 80 Tokyo, que devuelve una página web en vez de audio, se cerró entero en rojo; y al pausar SmoothFM quedó gris a medio anillo.
+
+El verde solo aparece con reproducción efectiva, igual que el «En directo», así que el dial no promete nada que no esté pasando. El color nunca va solo: el arco cambia de tamaño y el texto dice lo mismo con palabras. Contraste de los tres colores sobre la superficie: 4,8:1 el rojo, 7,7:1 el ámbar y 8,9:1 el verde, por encima del 3:1 que se pide a elementos gráficos.
+
 ## Lo que NO se ha podido comprobar
 
 - **Docker no está instalado en este equipo**, así que el `Dockerfile` está escrito pero **no se ha construido ni ejecutado nunca**.

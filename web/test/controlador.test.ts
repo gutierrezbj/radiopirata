@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ControladorAudio, type ElementoAudio } from '../src/audio/controlador';
+import { ControladorAudio, sintoniaDe, type ElementoAudio } from '../src/audio/controlador';
 import type { Emisora } from '../src/tipos';
 
 /** Doble de HTMLAudioElement: cada play() devuelve una promesa que la prueba resuelve o rechaza a mano. */
@@ -9,6 +9,7 @@ class AudioFalso implements ElementoAudio {
   muted = false;
   preload = '';
   error: { code: number } | null = null;
+  readyState = 0;
   pausas = 0;
   cargas = 0;
   pendientes: Array<{ src: string; resolver: () => void; rechazar: (e: Error) => void }> = [];
@@ -233,6 +234,58 @@ describe('ControladorAudio', () => {
     expect(oyente).toHaveBeenCalledTimes(1);
     cancelar();
     controlador.pausar();
+    expect(oyente).toHaveBeenCalledTimes(1);
+  });
+
+  it('la sintonía sube con lo que el navegador va teniendo del audio', async () => {
+    expect(controlador.instantanea().sintonia).toBe(0);
+
+    controlador.seleccionar(A);
+    expect(controlador.instantanea().sintonia).toBe(0.15);
+
+    el.readyState = 1;
+    el.emitir('loadedmetadata');
+    expect(controlador.instantanea().sintonia).toBe(0.35);
+
+    el.readyState = 2;
+    el.emitir('loadeddata');
+    expect(controlador.instantanea().sintonia).toBe(0.6);
+
+    el.readyState = 3;
+    el.emitir('canplay');
+    expect(controlador.instantanea().sintonia).toBe(0.85);
+
+    await el.empiezaASonar(A.url);
+    expect(controlador.instantanea().sintonia).toBe(1);
+  });
+
+  it('la sintonía cae a cero si la señal falla y no se queda alta de la emisora anterior', async () => {
+    controlador.seleccionar(A);
+    el.readyState = 4;
+    await el.empiezaASonar(A.url);
+    expect(controlador.instantanea().sintonia).toBe(1);
+
+    el.error = { code: 2 };
+    el.emitir('error');
+    expect(controlador.instantanea()).toMatchObject({ estado: 'error', sintonia: 0 });
+  });
+
+  it('en pausa la sintonía se queda a medias, ni apagada ni sonando', async () => {
+    controlador.seleccionar(A);
+    el.readyState = 4;
+    await el.empiezaASonar(A.url);
+    controlador.pausar();
+    expect(controlador.instantanea().sintonia).toBe(0.5);
+  });
+
+  it('solo avisa cuando la aguja se mueve de verdad', () => {
+    controlador.seleccionar(A);
+    const oyente = vi.fn();
+    controlador.suscribir(oyente);
+    el.emitir('progress');
+    expect(oyente).not.toHaveBeenCalled();
+    el.readyState = 2;
+    el.emitir('progress');
     expect(oyente).toHaveBeenCalledTimes(1);
   });
 

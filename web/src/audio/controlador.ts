@@ -17,6 +17,12 @@ export interface EstadoAudio {
   silenciado: boolean;
   /** Falso en navegadores que ignoran `volume` (iOS): el control se oculta. */
   puedeVolumen: boolean;
+  /**
+   * Cuánta señal hay, de 0 a 1. No es un adorno: sale de `readyState`, que es lo que el propio
+   * navegador sabe sobre cuánto audio tiene ya listo para sonar. 0 es «no llega nada» y 1 es
+   * «está sonando». Sirve para enseñar la sintonía como en una radio de verdad.
+   */
+  sintonia: number;
 }
 
 /** Subconjunto de HTMLAudioElement que usa el controlador; permite un doble en pruebas. */
@@ -26,6 +32,8 @@ export interface ElementoAudio {
   muted: boolean;
   preload: string;
   error: { code: number } | null;
+  /** 0 nada, 1 metadatos, 2 algo de audio, 3 suficiente para seguir, 4 de sobra. */
+  readyState: number;
   play(): Promise<void>;
   pause(): void;
   load(): void;
@@ -52,6 +60,30 @@ const MENSAJES: Record<CodigoError, string> = {
 };
 
 const MEDIA_ERR_SRC_NOT_SUPPORTED = 4;
+
+/** Eventos que cuentan cómo va llegando el audio; con ellos se mueve la aguja de sintonía. */
+const EVENTOS_DE_SENAL = ['loadedmetadata', 'loadeddata', 'canplay', 'canplaythrough', 'progress', 'stalled'] as const;
+
+/**
+ * Traduce lo que el navegador ya tiene del audio a una escala de 0 a 1.
+ * Mientras se conecta, la aguja sube sola a medida que llega señal de verdad.
+ */
+export function sintoniaDe(estado: EstadoReproduccion, readyState: number): number {
+  switch (estado) {
+    case 'playing':
+      return 1;
+    case 'idle':
+    case 'error':
+      return 0;
+    case 'paused':
+      return 0.5;
+    case 'loading':
+      if (readyState >= 3) return 0.85;
+      if (readyState === 2) return 0.6;
+      if (readyState === 1) return 0.35;
+      return 0.15;
+  }
+}
 
 /**
  * Único controlador de audio de la aplicación. Envuelve un solo elemento de audio persistente
@@ -84,12 +116,14 @@ export class ControladorAudio {
       volumen: el.volume,
       silenciado: el.muted,
       puedeVolumen,
+      sintonia: 0,
     };
     el.addEventListener('playing', this.enPlaying);
     el.addEventListener('waiting', this.enWaiting);
     el.addEventListener('pause', this.enPause);
     el.addEventListener('ended', this.enEnded);
     el.addEventListener('error', this.enError);
+    for (const evento of EVENTOS_DE_SENAL) el.addEventListener(evento, this.enSenal);
     this.ventana?.addEventListener('offline', this.enOffline);
   }
 
@@ -101,6 +135,7 @@ export class ControladorAudio {
     this.el.removeEventListener('pause', this.enPause);
     this.el.removeEventListener('ended', this.enEnded);
     this.el.removeEventListener('error', this.enError);
+    for (const evento of EVENTOS_DE_SENAL) this.el.removeEventListener(evento, this.enSenal);
     this.ventana?.removeEventListener('offline', this.enOffline);
     this.oyentes.clear();
   }
@@ -115,9 +150,16 @@ export class ControladorAudio {
   instantanea = (): EstadoAudio => this.estadoActual;
 
   private fijar(parcial: Partial<EstadoAudio>): void {
-    this.estadoActual = { ...this.estadoActual, ...parcial };
+    const siguiente = { ...this.estadoActual, ...parcial };
+    // La sintonía nunca se fija a mano: siempre se deduce del estado y de lo que el navegador tiene.
+    this.estadoActual = { ...siguiente, sintonia: sintoniaDe(siguiente.estado, this.el.readyState) };
     for (const oyente of this.oyentes) oyente();
   }
+
+  /** Llega más audio (o deja de llegar): solo avisamos si la aguja se mueve de verdad. */
+  private enSenal = (): void => {
+    if (sintoniaDe(this.estadoActual.estado, this.el.readyState) !== this.estadoActual.sintonia) this.fijar({});
+  };
 
   // --- Acciones ---
 

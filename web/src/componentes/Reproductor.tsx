@@ -8,6 +8,7 @@ import { useAudio } from '../audio/useAudio';
 import { useCola } from '../audio/useCola';
 import { lugarDeEmisora } from '../util/lugar';
 import { BotonCompartir } from './BotonCompartir';
+import { DialSintonia } from './DialSintonia';
 import {
   IconoAnterior,
   IconoEstrella,
@@ -19,7 +20,7 @@ import {
 } from './Iconos';
 
 export function Reproductor() {
-  const { estado, emisora, error, volumen, silenciado, puedeVolumen } = useAudio();
+  const { estado, emisora, error, volumen, silenciado, puedeVolumen, sintonia } = useAudio();
   const lista = useCola();
   const { favoritas, disponible } = useAlmacen();
   const idVolumen = useId();
@@ -53,14 +54,17 @@ export function Reproductor() {
             <IconoAnterior />
           </button>
         )}
-        <button
-          type="button"
-          className="boton-icono boton-icono--grande"
-          onClick={() => audio.alternar()}
-          aria-label={sonando ? 'Pausar' : estado === 'paused' ? 'Volver al directo' : 'Reproducir'}
-        >
-          {sonando ? <IconoPausa /> : <IconoPlay />}
-        </button>
+        <span className="dial">
+          <DialSintonia sintonia={sintonia} estado={estado} />
+          <button
+            type="button"
+            className="boton-icono boton-icono--grande"
+            onClick={() => audio.alternar()}
+            aria-label={sonando ? 'Pausar' : estado === 'paused' ? 'Volver al directo' : 'Reproducir'}
+          >
+            {sonando ? <IconoPausa /> : <IconoPlay />}
+          </button>
+        </span>
         {hayPasos && (
           <button
             type="button"
@@ -130,7 +134,7 @@ export function Reproductor() {
 function textoEstado(estado: string, mensajeError?: string): string {
   switch (estado) {
     case 'loading':
-      return 'Conectando…';
+      return 'Sintonizando…';
     case 'playing':
       return 'En directo';
     case 'paused':
