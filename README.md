@@ -7,11 +7,14 @@ La música siempre es buena compañía.
 
 ## Estado
 
-**E1 y E2 implementadas (2026-09-20).** Se busca en todo el catálogo por ciudad, país y estilo; hay un índice propio de 72 ciudades con coordenadas fiables, favoritas y recientes en el dispositivo, filtros por estilo y enlaces para compartir una emisora. La selección comprobada a mano de E1 sigue marcada como tal. No está publicada (E3).
+**E1, E2 y E3 implementadas (2026-09-21).** Se busca en todo el catálogo por ciudad, país y estilo; hay un índice propio de 72 ciudades con coordenadas fiables, favoritas y recientes en el dispositivo, filtros por estilo y enlaces para compartir una emisora. La selección comprobada a mano de E1 sigue marcada como tal. El despliegue está preparado y documentado.
+
+**No está publicada.** No hay alojamiento elegido, no se ha tocado el DNS y no se ha pedido ningún certificado. Publicar necesita la indicación de JuanCho y decidir dónde va.
 
 - Encargo y arquitectura: [AGENTS.md](AGENTS.md), [docs/ENCARGO.md](docs/ENCARGO.md).
 - Progreso y pendientes: [tasks/todo.md](tasks/todo.md).
-- Evidencia: [docs/VERIFICACION-E1.md](docs/VERIFICACION-E1.md) y [docs/VERIFICACION-E2.md](docs/VERIFICACION-E2.md).
+- Cómo desplegarla: [docs/DESPLIEGUE.md](docs/DESPLIEGUE.md).
+- Evidencia: [E1](docs/VERIFICACION-E1.md), [E2](docs/VERIFICACION-E2.md) y [E3](docs/VERIFICACION-E3.md).
 - Sincronización de la carpeta local: [docs/SINCRONIZACION.md](docs/SINCRONIZACION.md).
 - Repositorio: https://github.com/gutierrezbj/radiopirata · Destino previsto: `radio.jrgblanco.com` (pendiente de configurar).
 
@@ -68,18 +71,20 @@ npm run seleccion:verificar
 
 Sondea cada emisora por HTTP con User-Agent de navegador y actualiza `docs/VERIFICACION-E1.md` conservando las notas escritas a mano.
 
-## Resultados de la última validación (2026-09-20)
+## Resultados de la última validación (2026-09-21)
 
 | Comprobación | Resultado |
 |---|---|
 | `npm run typecheck` | sin errores (server y web) |
-| `npm test` | 59 pruebas en server, 54 en web, todas en verde |
-| `npm run build` | correcto; el globo va en un trozo aparte que solo se carga al entrar al explorador |
+| `npm test` | 64 pruebas en server, 58 en web, todas en verde |
+| `npm run build` | correcto |
+| Peso de la página de inicio | 82 kB transferidos; el globo son otros 550 kB que solo se cargan al entrar al explorador |
+| Contraste del tema | mínimo 6,6:1, muy por encima del 4,5:1 exigible |
+| Cabeceras de seguridad | política de contenidos, `nosniff`, `DENY` en marcos y permisos recortados |
 | Emisoras comprobadas a mano | 11 de 11 reproducen en Chromium |
-| Recorrido de E2 | búsqueda, filtros, favoritas, recientes, compartir y anterior/siguiente comprobados a mano |
 | Dispositivos | Windows 11 con el navegador integrado de Claude desktop (Chromium), escritorio y emulación móvil 375×812 |
 
-Detalle y limitaciones: [docs/VERIFICACION-E2.md](docs/VERIFICACION-E2.md).
+Detalle y limitaciones: [docs/VERIFICACION-E3.md](docs/VERIFICACION-E3.md). Lo que **no** se ha podido comprobar: Docker no está instalado en este equipo, así que el `Dockerfile` no se ha construido nunca; los ficheros de systemd y nginx no se han aplicado a ningún servidor; y sigue sin probarse en Firefox, Safari ni teléfonos físicos.
 
 ## Qué se puede hacer
 
@@ -95,10 +100,11 @@ Detalle y limitaciones: [docs/VERIFICACION-E2.md](docs/VERIFICACION-E2.md).
 
 ```
 server/   API Node + Express (TypeScript). Adaptador de Radio Browser, índice de ciudades,
-          búsqueda, caché acotada y selección comprobada a mano con fecha.
+          búsqueda, caché acotada, cabeceras de seguridad y selección comprobada con fecha.
 web/      React + TypeScript + Vite. Inicio, explorador con Globe.gl, panel de emisoras,
           reproductor único y almacén local de favoritas y recientes.
-docs/     Encargo, sincronización y verificación.
+deploy/   Ejemplos de systemd y nginx para servirla en una máquina propia.
+docs/     Encargo, despliegue, sincronización y verificación.
 tasks/    Progreso.
 ```
 
@@ -124,9 +130,11 @@ Piezas clave:
 
 El audio nunca pasa por la API: va del servidor de la emisora al navegador.
 
-## Configuración
+## Configuración y despliegue
 
-Variables documentadas en [.env.example](.env.example): puerto, ruta del build de la web, User-Agent, timeout de Radio Browser y tamaño/vida de la caché. Ningún valor es secreto.
+Variables documentadas en [.env.example](.env.example): puerto, ruta del build de la web, User-Agent, timeout de Radio Browser, tamaño y vida de la caché, proxies de confianza y HSTS. Ningún valor es secreto: RadioPirata no usa claves ni cuentas.
+
+`npm start` sirve la web y la API en el mismo proceso y el mismo origen. Hay un [Dockerfile](Dockerfile) y ejemplos de [systemd](deploy/radiopirata.service) y [nginx](deploy/nginx-radiopirata.conf). Los pasos completos, incluidos DNS y HTTPS, están en [docs/DESPLIEGUE.md](docs/DESPLIEGUE.md).
 
 ## Decisiones y límites
 

@@ -63,6 +63,15 @@ export function claveDeRuta(ruta: Ruta): string {
 
 let actual: Ruta = typeof window === 'undefined' ? { tipo: 'inicio' } : analizar(window.location.search);
 const oyentes = new Set<() => void>();
+let navegaciones = 0;
+
+/**
+ * ¿Ha navegado ya la persona dentro de la aplicación?
+ * Sirve para mover el foco al cambiar de vista sin robárselo a quien acaba de abrir un enlace.
+ */
+export function huboNavegacion(): boolean {
+  return navegaciones > 0;
+}
 
 function avisar(): void {
   for (const oyente of oyentes) oyente();
@@ -72,6 +81,7 @@ export function navegar(ruta: Ruta, reemplazar = false): void {
   const destino = formatear(ruta);
   if (claveDeRuta(actual) === destino) return;
   actual = ruta;
+  navegaciones++;
   if (reemplazar) window.history.replaceState(null, '', destino);
   else window.history.pushState(null, '', destino);
   avisar();
@@ -80,6 +90,7 @@ export function navegar(ruta: Ruta, reemplazar = false): void {
 if (typeof window !== 'undefined') {
   window.addEventListener('popstate', () => {
     actual = analizar(window.location.search);
+    navegaciones++;
     avisar();
   });
 }
@@ -98,7 +109,8 @@ export function useRuta(): Ruta {
 }
 
 /** Solo para pruebas: reinicia la ruta interna sin tocar el historial. */
-export function _fijarRutaParaPruebas(ruta: Ruta): void {
+export function _fijarRutaParaPruebas(ruta: Ruta, conNavegacion = false): void {
   actual = ruta;
+  navegaciones = conNavegacion ? 1 : 0;
   avisar();
 }

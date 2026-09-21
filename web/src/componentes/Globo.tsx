@@ -5,7 +5,7 @@ import { feature } from 'topojson-client';
 import type { Topology } from 'topojson-specification';
 import tierra from 'world-atlas/land-110m.json';
 import type { Emisora, Lugar } from '../tipos';
-import { prefiereMenosMovimiento } from '../util/entorno';
+import { pixelRatioAdecuado, prefiereMenosMovimiento } from '../util/entorno';
 
 interface Props {
   /** Todas las ciudades del índice propio: son los puntos que se pueden abrir. */
@@ -36,6 +36,8 @@ interface PuntoEmisora {
 type Punto = PuntoLugar | PuntoEmisora;
 
 const ALTITUD_DESTINO = 1.6;
+/** Tiempo sin tocar el globo tras el cual se deja de dibujar. Nada se mueve solo, así que no se pierde nada. */
+const SIESTA_MS = 3000;
 const topologia = tierra as unknown as Topology;
 const superficie = feature(topologia, topologia.objects['land'] as Parameters<typeof feature>[1]);
 const poligonos = superficie.type === 'FeatureCollection' ? superficie.features : [superficie];
@@ -53,6 +55,8 @@ export function Globo({ lugares, lugarEnfocado, emisoras, alElegirLugar, alPasar
   callbacks.current = { alElegirLugar, alPasarPorLugar };
   const enfoqueInicial = useRef(lugarEnfocado);
   const primerEnfoque = useRef(true);
+  /** Vuelve a dibujar el globo y programa la siguiente siesta. La coloca el efecto de montaje. */
+  const despertar = useRef<(durante?: number) => void>(() => undefined);
 
   useEffect(() => {
     const el = contenedor.current;
@@ -101,7 +105,7 @@ export function Globo({ lugares, lugarEnfocado, emisoras, alElegirLugar, alPasar
     material.emissive.set('#0E1012');
     material.shininess = 4;
 
-    g.renderer().setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    g.renderer().setPixelRatio(pixelRatioAdecuado());
     const controles = g.controls();
     // Sin giro automático: el lugar elegido debe quedarse a la vista.
     controles.autoRotate = false;
@@ -117,22 +121,53 @@ export function Globo({ lugares, lugarEnfocado, emisoras, alElegirLugar, alPasar
       0,
     );
 
+    // El globo no gira solo: cuando nadie lo toca, no hace falta redibujarlo sesenta veces por
+    // segundo. Se duerme tras unos segundos de calma y se despierta con cualquier interacción.
+    let siesta: ReturnType<typeof setTimeout> | null = null;
+    let dormido = false;
+    const dormir = () => {
+      if (dormido) return;
+      dormido = true;
+      g.pauseAnimation();
+    };
+    const activar = (durante = SIESTA_MS) => {
+      if (dormido) {
+        dormido = false;
+        g.resumeAnimation();
+      }
+      if (siesta !== null) clearTimeout(siesta);
+      siesta = setTimeout(dormir, durante);
+    };
+    despertar.current = activar;
+    activar();
+
+    const interaccion = () => activar();
+    for (const evento of ['pointerdown', 'pointermove', 'wheel', 'touchstart'] as const) {
+      el.addEventListener(evento, interaccion, { passive: true });
+    }
+
     const observador = new ResizeObserver(([entrada]) => {
       if (!entrada) return;
       g.width(entrada.contentRect.width).height(entrada.contentRect.height);
+      activar();
     });
     observador.observe(el);
     g.width(el.clientWidth).height(el.clientHeight);
 
     const visibilidad = () => {
-      if (document.hidden) g.pauseAnimation();
-      else g.resumeAnimation();
+      if (document.hidden) dormir();
+      else activar();
     };
     document.addEventListener('visibilitychange', visibilidad);
 
     globo.current = g;
     return () => {
       document.removeEventListener('visibilitychange', visibilidad);
+      for (const evento of ['pointerdown', 'pointermove', 'wheel', 'touchstart'] as const) {
+        el.removeEventListener(evento, interaccion);
+      }
+      if (siesta !== null) clearTimeout(siesta);
+      despertar.current = () => undefined;
       observador.disconnect();
       g.pauseAnimation();
       g._destructor();
@@ -148,6 +183,7 @@ export function Globo({ lugares, lugarEnfocado, emisoras, alElegirLugar, alPasar
     if (!g) return;
     // Solo se escribe el nombre del lugar abierto: 70 etiquetas a la vez taparían el mundo.
     g.labelsData(lugarEnfocado ? [lugarEnfocado] : []);
+    despertar.current();
   }, [lugarEnfocado]);
 
   useEffect(() => {
@@ -168,6 +204,7 @@ export function Globo({ lugares, lugarEnfocado, emisoras, alElegirLugar, alPasar
       ),
     ];
     g.pointsData(puntos);
+    despertar.current();
   }, [lugares, emisoras, lugarEnfocado]);
 
   useEffect(() => {
@@ -179,6 +216,8 @@ export function Globo({ lugares, lugarEnfocado, emisoras, alElegirLugar, alPasar
     const duracion = primerEnfoque.current ? 0 : prefiereMenosMovimiento() ? 0 : 1200;
     primerEnfoque.current = false;
     if (yaColocado) return;
+    // Se mantiene dibujando mientras dura el viaje de cámara, y un poco más.
+    despertar.current(duracion + SIESTA_MS);
     g.pointOfView(
       { lat: lugarEnfocado.coordenadas.lat, lng: lugarEnfocado.coordenadas.lng, altitude: ALTITUD_DESTINO },
       duracion,

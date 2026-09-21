@@ -1,6 +1,8 @@
+import compression from 'compression';
 import express, { type Express } from 'express';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { cabecerasSeguras } from './cabeceras.js';
 import { MAX_RESULTADOS, POR_PAGINA, type Catalogo } from './catalogo.js';
 import { codigoPaisValido, consultaValida, esIdDestino, esUuid, MAX_CONSULTA, paginaValida } from './validacion.js';
 
@@ -8,13 +10,23 @@ export interface OpcionesApp {
   catalogo: Catalogo;
   /** Carpeta del build de la web a servir en producción; si no existe, solo se sirve la API. */
   webDist?: string | undefined;
+  /** Número de proxies de confianza por delante (nginx, balanceador). 0 = ninguno. */
+  proxiesDeConfianza?: number;
+  /** Añade HSTS: activar solo cuando el sitio ya se sirva por HTTPS. */
+  hsts?: boolean;
 }
 
 const MAX_PAGINAS = Math.ceil(MAX_RESULTADOS / POR_PAGINA);
+/** Los ficheros con hash en el nombre no cambian nunca: se pueden cachear para siempre. */
+const UN_ANO = 365 * 24 * 60 * 60;
 
-export function crearApp({ catalogo, webDist }: OpcionesApp): Express {
+export function crearApp({ catalogo, webDist, proxiesDeConfianza = 0, hsts = false }: OpcionesApp): Express {
   const app = express();
   app.disable('x-powered-by');
+  if (proxiesDeConfianza > 0) app.set('trust proxy', proxiesDeConfianza);
+  // El trozo del globo pesa unos 2 MB sin comprimir y menos de 600 kB comprimido.
+  app.use(compression());
+  app.use(cabecerasSeguras({ hsts }));
 
   app.get('/api/salud', (_req, res) => {
     res.json({ ok: true, destinos: catalogo.destinos().length, lugares: catalogo.lugares().length });
@@ -146,7 +158,17 @@ export function crearApp({ catalogo, webDist }: OpcionesApp): Express {
     const carpeta = resolve(webDist);
     const indice = resolve(carpeta, 'index.html');
     if (existsSync(indice)) {
-      // Los assets llevan hash en el nombre y pueden cachearse; index.html no, para que cada despliegue se vea al instante.
+      // Los assets llevan hash en el nombre: se cachean para siempre. El index.html no, para que
+      // cada despliegue se vea al instante sin que nadie tenga que vaciar la caché.
+      app.use(
+        '/assets',
+        express.static(resolve(carpeta, 'assets'), {
+          index: false,
+          immutable: true,
+          maxAge: UN_ANO * 1000,
+          fallthrough: false,
+        }),
+      );
       app.use(express.static(carpeta, { index: false, maxAge: '1h' }));
       app.get(/.*/, (_req, res) => {
         res.setHeader('Cache-Control', 'no-cache');

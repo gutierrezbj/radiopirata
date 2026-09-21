@@ -48,11 +48,29 @@
 - Una búsqueda devuelve como mucho 120 emisoras.
 - Sin captura de audio: «reproduce» significa evento `playing` del navegador, no escucha con altavoces.
 
-## E3 — Publicación
-- [ ] Validar rendimiento, accesibilidad y dispositivos reales.
+## E3 — Preparación pública · preparada el 2026-09-21
+- [x] Rendimiento: compresión en el servidor, caché inmutable para ficheros con hash, densidad de píxeles del globo según el equipo y globo que deja de dibujarse cuando nadie lo toca.
+- [x] Medir lo que se descarga de verdad: 82 kB en el inicio; el globo son otros 550 kB y solo los paga quien entra al explorador.
+- [x] Accesibilidad: contraste medido (mínimo 6,6:1), orden de tabulación, foco al encabezado al cambiar de vista, título de pestaña por vista y aviso para lectores de pantalla.
+- [x] Fallos de proveedor y de señal forzados a mano: emisora que no reproduce, lugar inexistente, emisora compartida caída y catálogo sin respuesta.
+- [x] Cabeceras de seguridad y política de contenidos, con HSTS apagado hasta que haya HTTPS.
+- [x] Apagado ordenado del servidor al recibir SIGTERM.
+- [x] Preparar despliegue: Dockerfile, unidad de systemd, configuración de nginx y `docs/DESPLIEGUE.md` con DNS y HTTPS.
 - [ ] Probar en Firefox y Safari, y en un teléfono de verdad.
-- [ ] Confirmar alojamiento.
-- [ ] Preparar configuración HTTPS y dominio.
-- [ ] Publicar cuando lo indique el usuario.
+- [ ] Confirmar alojamiento. **Decisión de JuanCho.**
+- [ ] Apuntar `radio.jrgblanco.com` y pedir el certificado. **Necesita el alojamiento elegido.**
+- [ ] Publicar cuando lo indique el usuario. **No hecho a propósito.**
+
+### Arreglado durante E3
+- La política de contenidos bloqueaba los estilos en línea del globo y rompía la información al pasar el ratón. Se abrió `style-src` dejando `script-src` cerrado.
+- El encabezado decía «Cargando…» mientras mostraba el error de un lugar desconocido.
+- Al entrar al explorador desde el inicio, el foco caía al cuerpo del documento.
+
+### Sin comprobar en E3
+- Docker no está instalado en este equipo: el `Dockerfile` está escrito pero nunca se ha construido.
+- Los ficheros de systemd y nginx no se han aplicado a ninguna máquina.
+- La activación con teclado (Enter y Espacio) no se pudo observar porque la automatización del navegador no la dispara; el orden de tabulación y el foco sí se comprobaron.
+- Sigue sin probarse en Firefox, Safari, iOS, Android ni teléfonos físicos.
+- El aviso para lectores de pantalla se comprobó leyendo el DOM, no con un lector real.
 
 No marcar como hecha una prueba sin ejecutarla. Registrar bloqueos y limitaciones.

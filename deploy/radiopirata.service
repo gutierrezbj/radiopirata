@@ -1,0 +1,46 @@
+# Unidad systemd de ejemplo para servir RadioPirata sin Docker.
+# Copiar a /etc/systemd/system/radiopirata.service y ajustar rutas y usuario.
+#
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now radiopirata
+#   systemctl status radiopirata
+#
+# El servicio espera que el repositorio esté en /srv/radiopirata y que ya se haya ejecutado
+# `npm ci --omit=dev` y `npm run build` dentro de él.
+
+[Unit]
+Description=RadioPirata — web y API
+Documentation=https://github.com/gutierrezbj/radiopirata
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=radiopirata
+Group=radiopirata
+WorkingDirectory=/srv/radiopirata/server
+ExecStart=/usr/bin/node dist/index.js
+EnvironmentFile=/srv/radiopirata/.env
+
+# Reinicio y apagado ordenado: el proceso cierra las conexiones abiertas al recibir SIGTERM.
+Restart=on-failure
+RestartSec=5
+KillSignal=SIGTERM
+TimeoutStopSec=20
+
+# La aplicación no escribe nada en disco ni necesita privilegios.
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadOnlyPaths=/srv/radiopirata
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET AF_INET6
+RestrictNamespaces=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=no
+
+[Install]
+WantedBy=multi-user.target

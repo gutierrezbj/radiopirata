@@ -87,9 +87,15 @@ export function Explorador({ ruta, indice, sorpresa, alConsumirSorpresa, alSorpr
     if (elegida) reproducirDesde(elegida, candidatas);
   }, [remoto, alConsumirSorpresa]);
 
+  // El lugar sale del índice que ya está cargado, así que el globo se mueve sin esperar a las emisoras.
+  const lugarDelIndice = useMemo(
+    () => (ruta.tipo === 'lugar' ? (indice.lugares.find((l) => l.id === ruta.id) ?? null) : null),
+    [ruta, indice.lugares],
+  );
+
   const contenido = useMemo(
-    () => construirContenido(ruta, remoto, datosAlmacen.favoritas, datosAlmacen.recientes),
-    [ruta, remoto, datosAlmacen],
+    () => construirContenido(ruta, remoto, datosAlmacen.favoritas, datosAlmacen.recientes, lugarDelIndice),
+    [ruta, remoto, datosAlmacen, lugarDelIndice],
   );
   const filtros = useMemo(() => filtrosDe(contenido.emisoras), [contenido.emisoras]);
   const visibles = useMemo(() => filtrarPorEtiqueta(contenido.emisoras, etiqueta), [contenido.emisoras, etiqueta]);
@@ -113,11 +119,7 @@ export function Explorador({ ruta, indice, sorpresa, alConsumirSorpresa, alSorpr
       .finally(() => setCargandoMas(false));
   }, [remoto, cargandoMas, ruta]);
 
-  // El lugar sale del índice que ya está cargado, así que el globo se mueve sin esperar a las emisoras.
-  const lugarEnfocado = useMemo(() => {
-    if (ruta.tipo !== 'lugar') return null;
-    return indice.lugares.find((l) => l.id === ruta.id) ?? (remoto.estado === 'lugar' ? remoto.datos.lugar : null);
-  }, [ruta, indice.lugares, remoto]);
+  const lugarEnfocado = lugarDelIndice ?? (remoto.estado === 'lugar' ? remoto.datos.lugar : null);
   const estadoPanel = remoto.estado === 'cargando' ? 'cargando' : remoto.estado === 'error' ? 'error' : 'listo';
 
   return (
@@ -162,6 +164,7 @@ export function Explorador({ ruta, indice, sorpresa, alConsumirSorpresa, alSorpr
         <PanelEmisoras
           estado={estadoPanel}
           mensajeError={remoto.estado === 'error' ? remoto.mensaje : null}
+          claveVista={clave}
           contenido={{ ...contenido, emisoras: visibles, hayMas: contenido.hayMas && etiqueta === null }}
           filtros={filtros}
           etiqueta={etiqueta}
@@ -258,7 +261,13 @@ function acciones(ruta: Props['ruta'], remoto: Remoto, alSorprender: () => void)
   return null;
 }
 
-function construirContenido(ruta: Props['ruta'], remoto: Remoto, favoritas: Emisora[], recientes: Emisora[]): ContenidoPanel {
+function construirContenido(
+  ruta: Props['ruta'],
+  remoto: Remoto,
+  favoritas: Emisora[],
+  recientes: Emisora[],
+  lugarDelIndice: Lugar | null,
+): ContenidoPanel {
   const vacio: ContenidoPanel = {
     titulo: '',
     subtitulo: null,
@@ -292,7 +301,12 @@ function construirContenido(ruta: Props['ruta'], remoto: Remoto, favoritas: Emis
         nota: recientes.length > 0 ? 'Se apunta una emisora cuando empieza a sonar de verdad.' : null,
       };
     case 'lugar':
-      if (remoto.estado !== 'lugar') return { ...vacio, titulo: 'Cargando…' };
+      if (remoto.estado !== 'lugar') {
+        // Mientras cargan las emisoras, o si falla, el encabezado ya puede decir dónde estamos.
+        return lugarDelIndice
+          ? { ...vacio, titulo: lugarDelIndice.nombre, subtitulo: lugarDelIndice.pais }
+          : { ...vacio, titulo: 'Lugar desconocido' };
+      }
       return {
         ...vacio,
         titulo: remoto.datos.lugar.nombre,

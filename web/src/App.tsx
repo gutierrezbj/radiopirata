@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { obtenerDestinos, obtenerLugares } from './api/cliente';
 import { useAudio } from './audio/useAudio';
 import { Explorador } from './componentes/Explorador';
@@ -7,6 +7,7 @@ import { Reproductor } from './componentes/Reproductor';
 import type { Destino, Lugar } from './tipos';
 import { lugarAlAzar } from './util/lugares';
 import { navegar, useRuta } from './util/ruta';
+import { nombreDeVista, tituloDeRuta } from './util/titulo';
 
 export interface EstadoIndice {
   estado: 'cargando' | 'listo' | 'error';
@@ -44,6 +45,13 @@ export function App() {
     return () => control.abort();
   }, [intento]);
 
+  const vista = useMemo(() => nombreDeVista(ruta, indice.lugares), [ruta, indice.lugares]);
+
+  // El título de la pestaña acompaña a la vista, igual que en cualquier sitio con páginas.
+  useEffect(() => {
+    document.title = tituloDeRuta(ruta, indice.lugares);
+  }, [ruta, indice.lugares]);
+
   /** Un lugar al azar del índice y, al llegar su lista, una emisora al azar. */
   const sorprender = useCallback(() => {
     const lugar = lugarAlAzar(indice.lugares);
@@ -69,6 +77,10 @@ export function App() {
         />
       )}
       {hayReproductor && <Reproductor />}
+      {/* Aquí no se pinta nada: es el aviso de cambio de vista para lectores de pantalla. */}
+      <p className="visualmente-oculto" role="status" aria-live="polite">
+        {vista}
+      </p>
     </div>
   );
 }

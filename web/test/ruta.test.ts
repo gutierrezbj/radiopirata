@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { analizar, claveDeRuta, formatear, type Ruta } from '../src/util/ruta';
+import { _fijarRutaParaPruebas, analizar, claveDeRuta, formatear, huboNavegacion, navegar, type Ruta } from '../src/util/ruta';
 
 const UUID = 'cc461784-3150-4a34-81c5-2116fe024740';
 
@@ -62,5 +62,19 @@ describe('formatear', () => {
   it('codifica el texto para que no rompa la dirección', () => {
     expect(formatear({ tipo: 'busqueda', q: 'rock & roll' })).toBe('/?q=rock%20%26%20roll');
     expect(claveDeRuta({ tipo: 'lugar', id: 'tokio' })).toBe('/?lugar=tokio');
+  });
+});
+
+describe('huboNavegacion', () => {
+  it('distingue abrir un enlace de navegar dentro de la aplicación', () => {
+    _fijarRutaParaPruebas({ tipo: 'inicio' });
+    expect(huboNavegacion()).toBe(false);
+    // Navegar al mismo sitio no cuenta como navegar.
+    navegar({ tipo: 'inicio' });
+    expect(huboNavegacion()).toBe(false);
+    navegar({ tipo: 'lugar', id: 'tokio' });
+    expect(huboNavegacion()).toBe(true);
+    _fijarRutaParaPruebas({ tipo: 'inicio' });
+    expect(huboNavegacion()).toBe(false);
   });
 });

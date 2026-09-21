@@ -1,7 +1,8 @@
+import { useEffect, useRef } from 'react';
 import type { EstadoReproduccion } from '../audio/controlador';
 import type { Emisora, Lugar } from '../tipos';
 import type { Filtro } from '../util/filtros';
-import { navegar } from '../util/ruta';
+import { huboNavegacion, navegar } from '../util/ruta';
 import { ListaEmisoras } from './ListaEmisoras';
 
 export interface ContenidoPanel {
@@ -19,6 +20,8 @@ export interface ContenidoPanel {
 interface Props {
   estado: 'cargando' | 'listo' | 'error';
   mensajeError: string | null;
+  /** Cambia con la vista: sirve para llevar el foco al título al navegar. */
+  claveVista: string;
   contenido: ContenidoPanel;
   filtros: Filtro[];
   etiqueta: string | null;
@@ -39,6 +42,7 @@ interface Props {
 export function PanelEmisoras({
   estado,
   mensajeError,
+  claveVista,
   contenido,
   filtros,
   etiqueta,
@@ -55,10 +59,18 @@ export function PanelEmisoras({
   alReintentar,
   acciones,
 }: Props) {
+  const titulo = useRef<HTMLHeadingElement>(null);
+
+  // Al cambiar de vista el foco pasa al título, para no dejar a quien usa teclado en un botón
+  // que ya no existe. A quien acaba de abrir un enlace no se le toca el foco: no ha navegado él.
+  useEffect(() => {
+    if (huboNavegacion()) titulo.current?.focus();
+  }, [claveVista]);
+
   return (
     <aside className="panel" aria-labelledby="panel-titulo">
       <div className="panel__cabecera">
-        <h2 id="panel-titulo" className="panel__titulo">
+        <h2 id="panel-titulo" className="panel__titulo" ref={titulo} tabIndex={-1}>
           {contenido.titulo}
         </h2>
         {contenido.subtitulo && <p className="panel__pais">{contenido.subtitulo}</p>}
