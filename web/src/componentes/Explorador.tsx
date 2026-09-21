@@ -10,7 +10,6 @@ import { filtrarPorEtiqueta, filtrosDe } from '../util/filtros';
 import { lugarDeEmisora } from '../util/lugar';
 import { claveDeRuta, navegar, type Ruta } from '../util/ruta';
 import { hayWebGL } from '../util/entorno';
-import { useHoraLocal } from '../util/useHoraLocal';
 import { Buscador } from './Buscador';
 import { IconoRadio } from './Iconos';
 import { PanelEmisoras, type ContenidoPanel } from './PanelEmisoras';
@@ -98,8 +97,6 @@ export function Explorador({ ruta, indice, sorpresa, alConsumirSorpresa, alSorpr
     () => (ruta.tipo === 'lugar' ? (indice.lugares.find((l) => l.id === ruta.id) ?? null) : null),
     [ruta, indice.lugares],
   );
-  const { frase: horaDelLugar } = useHoraLocal(lugarDelIndice?.zonaHoraria);
-
   const contenido = useMemo(
     () => construirContenido(ruta, remoto, datosAlmacen.favoritas, datosAlmacen.recientes, lugarDelIndice),
     [ruta, remoto, datosAlmacen, lugarDelIndice],
@@ -191,7 +188,7 @@ export function Explorador({ ruta, indice, sorpresa, alConsumirSorpresa, alSorpr
             mensajeError={remoto.estado === 'error' ? remoto.mensaje : null}
             claveVista={clave}
             contenido={{ ...contenido, emisoras: visibles, hayMas: contenido.hayMas && etiqueta === null }}
-            hora={horaDelLugar}
+            zonaHoraria={lugarDelIndice?.zonaHoraria ?? null}
             filtros={filtros}
             etiqueta={etiqueta}
             emisoraActual={audioEstado.emisora}

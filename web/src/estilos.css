@@ -499,10 +499,145 @@ button {
   color: var(--secundario);
 }
 
-.panel__hora {
-  margin: 4px 0 0;
+/* ---------- Relojes de láminas ---------- */
+
+.relojes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  margin-top: 12px;
+}
+
+.reloj-bloque__etiqueta {
+  margin: 0 0 6px;
   color: var(--secundario);
-  font-size: 0.9rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+}
+
+.reloj-bloque__detalle {
+  color: var(--secundario);
+}
+
+.reloj {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.reloj__grupo {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.reloj__separador {
+  width: 6px;
+  height: 1.2em;
+  margin: 0 3px;
+  font-size: 1.6rem;
+  background:
+    radial-gradient(circle, var(--secundario) 2.2px, transparent 2.6px) 50% 32% / 6px 6px no-repeat,
+    radial-gradient(circle, var(--secundario) 2.2px, transparent 2.6px) 50% 68% / 6px 6px no-repeat;
+}
+
+.lamina {
+  position: relative;
+  display: inline-block;
+  width: 0.74em;
+  height: 1.2em;
+  font-size: 1.6rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  perspective: 240px;
+  border-radius: 6px;
+  box-shadow: 0 1px 0 rgba(245, 240, 230, 0.06), 0 4px 10px rgba(0, 0, 0, 0.35);
+}
+
+.lamina::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 4;
+}
+
+.lamina__mitad,
+.lamina__hoja {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 50%;
+  overflow: hidden;
+  background: #0e1012;
+  color: var(--texto);
+  text-align: center;
+  backface-visibility: hidden;
+}
+
+.lamina__mitad--arriba,
+.lamina__hoja--arriba {
+  top: 0;
+  border-radius: 6px 6px 0 0;
+  background: #14171a;
+}
+
+.lamina__mitad--abajo,
+.lamina__hoja--abajo {
+  bottom: 0;
+  border-radius: 0 0 6px 6px;
+}
+
+.lamina__texto {
+  display: block;
+  height: 1.2em;
+  line-height: 1.2em;
+}
+
+.lamina__mitad--abajo .lamina__texto,
+.lamina__hoja--abajo .lamina__texto {
+  transform: translateY(-50%);
+}
+
+.lamina__hoja--arriba {
+  z-index: 3;
+  transform-origin: bottom center;
+  animation: laminaCae 320ms ease-in forwards;
+}
+
+.lamina__hoja--abajo {
+  z-index: 3;
+  transform-origin: top center;
+  transform: rotateX(90deg);
+  animation: laminaSube 320ms ease-out 320ms forwards;
+}
+
+@keyframes laminaCae {
+  from {
+    transform: rotateX(0deg);
+  }
+  to {
+    transform: rotateX(-90deg);
+  }
+}
+
+@keyframes laminaSube {
+  from {
+    transform: rotateX(90deg);
+  }
+  to {
+    transform: rotateX(0deg);
+  }
+}
+
+@media (max-width: 767px) {
+  .lamina,
+  .reloj__separador {
+    font-size: 1.35rem;
+  }
 }
 
 /* ---------- Países para noticias ---------- */

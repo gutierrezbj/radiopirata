@@ -31,6 +31,16 @@ export function momentoDelDia(hora: number): MomentoDelDia {
   return 'por la noche';
 }
 
+/** La hora de quien escucha, con el huso de su propio navegador. */
+export function horaAqui(fecha: Date = new Date()): string {
+  return new Intl.DateTimeFormat('es', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(fecha);
+}
+
+/** «11:50» → ['1', '1', '5', '0']. Lo que no sea dígito se descarta. */
+export function digitosDeHora(hora: string): string[] {
+  return hora.split('').filter((c) => c >= '0' && c <= '9');
+}
+
 /** «Allí son las 22:14, por la noche.» Null si el navegador no conoce la zona. */
 export function fraseHora(zona: string, fecha: Date = new Date()): string | null {
   const hora = horaLocal(zona, fecha);

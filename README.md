@@ -76,7 +76,7 @@ Sondea cada emisora por HTTP con User-Agent de navegador y actualiza `docs/VERIF
 | Comprobación | Resultado |
 |---|---|
 | `npm run typecheck` | sin errores (server y web) |
-| `npm test` | 83 pruebas en server, 88 en web, todas en verde |
+| `npm test` | 83 pruebas en server, 89 en web, todas en verde |
 | `npm run build` | correcto |
 | Peso de la página de inicio | 82 kB transferidos; el globo son otros 550 kB que solo se cargan al entrar al explorador |
 | Contraste del tema | mínimo 6,6:1, muy por encima del 4,5:1 exigible |
@@ -98,7 +98,7 @@ Detalle y limitaciones: [docs/VERIFICACION-E3.md](docs/VERIFICACION-E3.md). Lo q
 - **Sorpréndeme**: una ciudad al azar del índice y una emisora al azar de esa ciudad. **Donde ya es de noche** hace lo mismo solo entre las ciudades donde ahora es de noche.
 - **Noticias de tu país**, o de cualquiera de los 241 con emisoras en el catálogo: las que el catálogo o su nombre presentan como informativas, sin comprobar una a una y diciéndolo.
 - **Dormirse con la radio puesta**: temporizador de 15 a 60 minutos que baja el volumen al final y pausa. Cuenta contra una hora fija, así que funciona aunque la pestaña esté en segundo plano.
-- **Saber qué hora es allí**: «Allí son las 22:14, por la noche» en cada ciudad del índice y junto a la emisora que suena. El globo se ilumina desde donde está el sol, calculado con la fecha.
+- **Saber qué hora es allí**: en cada ciudad del índice, dos relojes de láminas como los de las estaciones de antes, el de allí y el de aquí, cuyos dígitos caen al entrar y cada vez que cambia el minuto. La emisora que suena lleva su hora al lado. El globo se ilumina desde donde está el sol, calculado con la fecha.
 
 ## Estructura
 

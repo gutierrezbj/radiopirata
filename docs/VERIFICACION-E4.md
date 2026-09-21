@@ -35,6 +35,16 @@ La lista de Venezuela mezcla emisoras claramente informativas (Radio Nacional de
 - El globo se ilumina desde donde está el sol, calculado con la fecha y sin ninguna fuente externa. Comprobado en capturas: con Lisboa abierta a media mañana, Europa y África iluminadas; con Guadalajara de madrugada, las Américas a oscuras y el borde iluminado por el este. La posición se recalcula cada cinco minutos.
 - «Donde ya es de noche» eligió Guadalajara a las 04:51 y empezó a sonar W Radio 101.5. Elige entre las ciudades del índice donde el sol está más de seis grados bajo el horizonte.
 
+## Añadido después: relojes de láminas
+
+Idea de JuanCho: los relojes de láminas que caían una detrás de otra. Se pusieron en la cabecera de cada ciudad del índice, dos: «Allí, en Caracas, por la mañana» y «Aquí», con la zona de la ciudad y la del navegador de quien escucha.
+
+- Cada dígito es una lámina partida por la mitad; al cambiar, la mitad de arriba cae mostrando el nuevo dígito y la de abajo sube detrás. Al entrar en la ciudad caen todas desde vacío; después solo cuando cambia el minuto. Se comprueba cada segundo para no perder ningún cambio.
+- Con «reducir movimiento» activado en el sistema, el dígito cambia sin caída.
+- Para lectores de pantalla, el bloque es un grupo con una frase entera: «Allí son las 07:04, por la mañana. Aquí son las 13:04.» Las láminas van ocultas.
+- Comprobado con el build de producción: Caracas 07:04 y aquí 13:04 en escritorio y en móvil emulado; Tokio 20:04 «por la noche». Ocho láminas por par de relojes, como toca.
+- **No comprobado**: la caída en sí no se ha visto fotograma a fotograma; se ve el resultado final. Y solo en Chromium.
+
 ## Tarjeta al compartir
 
 Comprobado con `curl` contra el servidor de producción:

@@ -4,6 +4,7 @@ import type { Emisora, Lugar } from '../tipos';
 import type { Filtro } from '../util/filtros';
 import { huboNavegacion, navegar } from '../util/ruta';
 import { ListaEmisoras } from './ListaEmisoras';
+import { RelojesAlliAqui } from './RelojLaminas';
 
 export interface ContenidoPanel {
   titulo: string;
@@ -23,8 +24,8 @@ interface Props {
   /** Cambia con la vista: sirve para llevar el foco al título al navegar. */
   claveVista: string;
   contenido: ContenidoPanel;
-  /** «Allí son las 22:14, por la noche.» Solo cuando se sabe la zona horaria del lugar. */
-  hora?: string | null;
+  /** Zona horaria del lugar, para el reloj de allí y el de aquí. Solo en ciudades del índice. */
+  zonaHoraria?: string | null;
   filtros: Filtro[];
   etiqueta: string | null;
   emisoraActual: Emisora | null;
@@ -46,7 +47,7 @@ export function PanelEmisoras({
   mensajeError,
   claveVista,
   contenido,
-  hora = null,
+  zonaHoraria = null,
   filtros,
   etiqueta,
   emisoraActual,
@@ -77,7 +78,7 @@ export function PanelEmisoras({
           {contenido.titulo}
         </h2>
         {contenido.subtitulo && <p className="panel__pais">{contenido.subtitulo}</p>}
-        {hora && <p className="panel__hora">{hora}</p>}
+        {zonaHoraria && <RelojesAlliAqui zona={zonaHoraria} nombreLugar={contenido.titulo} />}
       </div>
 
       {estado === 'cargando' && (

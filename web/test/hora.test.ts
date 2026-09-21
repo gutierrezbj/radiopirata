@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fraseHora, horaLocal, horaLocalNumerica, momentoDelDia } from '../src/util/hora';
+import { digitosDeHora, fraseHora, horaAqui, horaLocal, horaLocalNumerica, momentoDelDia } from '../src/util/hora';
 
 const instante = new Date('2026-09-21T02:14:00Z');
 
@@ -25,6 +25,15 @@ describe('momentoDelDia', () => {
     expect(momentoDelDia(13)).toBe('a mediodía');
     expect(momentoDelDia(17)).toBe('por la tarde');
     expect(momentoDelDia(22)).toBe('por la noche');
+  });
+});
+
+describe('horaAqui y digitosDeHora', () => {
+  it('la hora de aquí sale con dos dígitos y dos puntos, y se parte en láminas', () => {
+    expect(horaAqui(instante)).toMatch(/^\d{2}:\d{2}$/);
+    expect(digitosDeHora('11:50')).toEqual(['1', '1', '5', '0']);
+    expect(digitosDeHora('04:07')).toEqual(['0', '4', '0', '7']);
+    expect(digitosDeHora('')).toEqual([]);
   });
 });
 
