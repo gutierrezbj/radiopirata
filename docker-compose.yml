@@ -16,8 +16,8 @@ services:
       PORT: "3001"
       WEB_DIST: "../web/dist"
       TRUST_PROXY: "1"
-      # Activar solo cuando radiopirata.jrgblanco.com sirva HTTPS de verdad.
-      HSTS: "0"
+      # HTTPS activo en radiopirata.jrgblanco.com desde el 21 sep 2026 (Let's Encrypt).
+      HSTS: "1"
       RADIO_BROWSER_USER_AGENT: "RadioPirata/0.1 (+https://github.com/gutierrezbj/radiopirata)"
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3001/api/salud"]
