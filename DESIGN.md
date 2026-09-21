@@ -28,6 +28,7 @@ Radios de 16 px en tarjetas y 10 px en fichas pequeñas, botones en píldora, po
 - **Relojes de láminas**: hora de allí y de aquí en dígitos partidos que caen al cambiar, cada uno en un marco fino amarillo.
 - **Sello «comprobada»**: texto en amarillo con borde fino en las emisoras escuchadas a mano.
 - **Día y noche en el globo**: luz desde la posición real del sol.
+- **Tarjeta al compartir** (1200×630): el mismo carbón y el horizonte ámbar del inicio, la marca arriba a la izquierda, el dominio en una píldora de borde fino y el titular de la portada. Sin fotos ni degradados de moda: se reconoce como la misma casa.
 
 ## Motion
 Vocabulario limitado a tres patrones: transición de 160 ms `ease` en bordes y fondos de controles; viaje de cámara del globo de 1 200 ms; caída de lámina en 320 ms + 320 ms con `ease-in` / `ease-out`. Nunca lineal. Con `prefers-reduced-motion` no hay transiciones, la cámara salta y los dígitos cambian sin caer. El globo deja de dibujarse tras 3 s sin interacción.
@@ -41,4 +42,4 @@ Estados obligatorios en cada vista: cargando, vacío con salida, error con acci�
 Foco visible en amarillo, orden de tabulación lógico, foco al título al navegar (no al abrir un enlace), título de pestaña por vista, aviso `aria-live` de cambio de vista, globo `aria-hidden` con todo disponible desde listas, relojes como grupo con frase entera, tamaños táctiles de 44 px en el reproductor.
 
 ## Pendiente del protocolo UX/UI
-Identity Sprint documentado con moodboard no digital, decisión tipográfica con tensión, theme en `jrgb-ui`, subir los dos mockups aprobados a Diseño, QA visual en Safari y Firefox y en móvil real, y el Distinctiveness Audit de 12 puntos antes de cualquier deploy a producción.
+Identity Sprint documentado con moodboard no digital, decisión tipográfica con tensión, theme en `jrgb-ui`, subir los dos mockups aprobados a Diseño, QA visual en Safari y Firefox y en móvil real, y el Distinctiveness Audit de 12 puntos antes de cualquier deploy a producción. La tarjeta al compartir usa Segoe UI porque es la tipografía de la interfaz; si el Sprint cambia de familia, hay que regenerarla.

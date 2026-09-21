@@ -56,7 +56,7 @@ El norte lo puso JuanCho: la radio local de casa para quien vive fuera. Ver `doc
 - [x] Día y noche en el globo desde la posición real del sol; «Donde ya es de noche» en el inicio.
 - [x] Tarjeta al compartir: título y Open Graph puestos por el servidor para lugar, emisora, noticias y búsqueda.
 - [x] Relojes de láminas (idea de JuanCho): el de allí y el de aquí en la cabecera de cada ciudad, con caída de dígitos al entrar y al cambiar el minuto; frase entera para lectores de pantalla.
-- [ ] Imagen de la tarjeta (1200×630): falta un diseño; no se improvisa.
+- [x] Imagen de la tarjeta (1200×630) a petición de JuanCho el 2026-09-21: fondo carbón, horizonte del planeta, marca, titular y el dominio en una píldora amarilla. Se genera con `web/scripts/generar-tarjeta.py` y vive en `web/public/tarjeta.png`. El servidor añade `og:image` absoluta con tipo, medidas y texto alternativo, y `twitter:card` grande. Comprobado en el dominio real, también con el agente de WhatsApp.
 - [ ] Escuchar una a una las emisoras informativas de Venezuela.
 
 ## Registro JRGB y despliegue · decidido el 2026-09-21
