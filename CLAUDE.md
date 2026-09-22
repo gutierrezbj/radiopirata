@@ -31,7 +31,7 @@ Sin defaults genéricos de Tailwind, Shadcn ni Material. Identidad propia del pr
 Explorador de emisoras reales del mundo sobre un globo, para escucharlas con pocos pasos. Para quien vive fuera es la radio local de casa. Producto propio de JuanCho bajo el Manifiesto SDD-JRGB; primer proyecto JRGB puro por el Protocolo de Kickoff.
 
 ### Estado
-Fase 1 en curso. E1 a E4 entregadas (20-21 sep 2026) en `main`. **Desplegada en Servidor 2 el 21 sep 2026** (`/opt/apps/radiopirata`, contenedor `radiopirata-web` en 127.0.0.1:3240, vhost nginx en :80, registrada en healthcheck.sh y SA99). **Pendiente**: DNS de `radiopirata.jrgblanco.com` (panel del registrador, lo hace Juan), Certbot y HSTS. Ver `docs/DESPLIEGUE.md`. 172 pruebas (83 server, 89 web).
+Fase 1 en curso. E1 a E4 entregadas (20-21 sep 2026) en `main`. **En el aire en https://radiopirata.jrgblanco.com** desde el 21 sep 2026: Servidor 2, `/opt/apps/radiopirata`, contenedor `radiopirata-web` en 127.0.0.1:3240, certificado de Let's Encrypt y HSTS, registrada en healthcheck.sh y en SA99 (Mongo y `SEED_SERVERS`). Ver `docs/DESPLIEGUE.md` y `docs/VERIFICACION-DESPLIEGUE.md`. Retoques del 22 sep en `docs/VERIFICACION-RETOQUES-22SEP.md`. 181 pruebas (85 server, 96 web).
 
 ### Stack
 React 19 + TypeScript + Vite + Globe.gl (three.js) · Node 22 + Express 5 + TypeScript · Radio Browser como catálogo · **sin base de datos ni cuentas** (ADR-001: favoritas y recientes en `localStorage` versionado) · **un solo proceso** sirve web y API (ADR-002).
@@ -39,7 +39,7 @@ React 19 + TypeScript + Vite + Globe.gl (three.js) · Node 22 + Express 5 + Type
 ### Infraestructura
 - Offset **+240**: puerto **3240** → contenedor 3001 (web + `/api`). 4240 reservado sin uso.
 - Servidor 2 (187.77.71.102, Tailscale 100.110.52.21, hostname srv1369522), `/opt/apps/radiopirata`, `docker-compose.yml` con `127.0.0.1:3240:3001`.
-- nginx vhost `deploy/nginx-radiopirata.conf` + Certbot. Contenedor `radiopirata-web` a registrar en `healthcheck.sh` y en SA99 (`vps-staging`).
+- nginx vhost `/etc/nginx/sites-available/radiopirata.jrgblanco.com` con certificado (renueva solo, caduca el 20 dic 2026). Los cambios de dominio o certificado los ejecuta Juan: el modo automático del agente los deniega.
 - Sin secretos. Variables en `.env.example`.
 
 ### Integraciones
@@ -51,7 +51,8 @@ server/   src/app.ts, catalogo.ts, radioBrowser.ts, lugares.ts, tarjeta.ts, cabe
           validacion.ts · data/ (ciudades.json, seleccion-e1.json) · scripts/ · test/
 web/      src/audio/ (controlador, cola, temporizador, instancia) · src/componentes/ ·
           src/util/ (ruta, sol, hora, filtros, lugares) · src/almacen/ · test/
-docs/     ENCARGO.md, DESPLIEGUE.md, VERIFICACION-E1..E4.md, SINCRONIZACION.md
+docs/     ENCARGO.md, DESPLIEGUE.md, VERIFICACION-E1..E4.md, VERIFICACION-DESPLIEGUE.md,
+          VERIFICACION-RETOQUES-22SEP.md, SINCRONIZACION.md
 deploy/   nginx y systemd de ejemplo · tasks/todo.md · tasks/lessons.md · DESIGN.md · AGENTS.md
 ```
 
