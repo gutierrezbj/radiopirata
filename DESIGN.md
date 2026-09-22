@@ -28,13 +28,14 @@ Radios de 16 px en tarjetas y 10 px en fichas pequeñas, botones en píldora, po
 - **Relojes de láminas**: hora de allí y de aquí en dígitos partidos que caen al cambiar, cada uno en un marco fino amarillo.
 - **Sello «comprobada»**: texto en amarillo con borde fino en las emisoras escuchadas a mano.
 - **Día y noche en el globo**: luz desde la posición real del sol.
+- **Tecla de emisora** (22 sep): los atajos de la cabecera y los tres destinos comprobados del inicio son teclas con cuerpo, como las de un aparato de antes. Se hunden al pulsarlas, se quedan dentro mientras están puestas y encienden una lucecita ámbar bajo el texto. El estado se cuenta con relieve y con luz, nunca invirtiendo el color del texto: así el contraste no se mueve.
 - **Amanecer en el inicio** (idea de JuanCho, 22 sep): el borde del planeta entra por abajo con la luz templada del sol a punto de salir por la izquierda. Es un gradiente, no una animación: en el inicio no hay nada que mover.
 - **Tarjeta al compartir** (1200×630): el mismo carbón y el horizonte ámbar del inicio, la marca arriba a la izquierda, el dominio en una píldora de borde fino y el titular de la portada. Sin fotos ni degradados de moda: se reconoce como la misma casa.
 
 ## Motion
-Vocabulario limitado a cinco patrones: transición de 160 ms `ease` en bordes y fondos de controles; viaje de cámara del globo de 1 200 ms; caída de lámina en 320 ms + 320 ms con `ease-in` / `ease-out`. Nunca lineal. Se añaden dos el 22 sep 2026: **giro de búsqueda**, el globo girando a 0,55 sobre su eje mientras el catálogo responde, y **relleno desde el origen**, un círculo del color de acento que crece 420 ms desde el punto por donde entra el puntero en los atajos de la cabecera. Con `prefers-reduced-motion` no hay transiciones, la cámara salta, los dígitos cambian sin caer y el globo no gira. El globo deja de dibujarse tras 3 s sin interacción, salvo mientras dura el giro de búsqueda.
+Vocabulario limitado a cinco patrones: transición de 160 ms `ease` en bordes y fondos de controles; viaje de cámara del globo de 1 200 ms; caída de lámina en 320 ms + 320 ms con `ease-in` / `ease-out`. Nunca lineal. Se añaden dos el 22 sep 2026: **giro de búsqueda**, el globo girando a 0,55 sobre su eje mientras el catálogo responde, y **luz del dial**, el resplandor ámbar que sube 280 ms desde debajo de una tecla al pasar por encima, con su lucecita encendiéndose. Con `prefers-reduced-motion` no hay transiciones, la cámara salta, los dígitos cambian sin caer y el globo no gira. El globo deja de dibujarse tras 3 s sin interacción, salvo mientras dura el giro de búsqueda.
 
-El giro no es decoración: sin él, buscar parecía no hacer nada. El relleno sí lo es, y por eso se queda solo en tres botones.
+El giro no es decoración: sin él, buscar parecía no hacer nada. La luz del dial sí lo es, y por eso vive solo en las teclas.
 
 ## Componentes
 Inicio (pregunta, buscador, fichas de destinos comprobados, Sorpréndeme, Donde ya es de noche) · Explorador (cabecera con buscador compacto y atajos, panel izquierdo o hoja inferior en móvil, escena del globo) · Lista de emisoras (fila con acción principal, estrella y compartir) · Reproductor persistente (anterior, dial + play/pausa, siguiente, temporizador, favorita, compartir, volumen) · Panel de países · Relojes.
@@ -43,6 +44,11 @@ Estados obligatorios en cada vista: cargando, vacío con salida, error con acci�
 
 ## Accesibilidad
 Foco visible en amarillo, orden de tabulación lógico, foco al título al navegar (no al abrir un enlace), título de pestaña por vista, aviso `aria-live` de cambio de vista, globo `aria-hidden` con todo disponible desde listas, relojes como grupo con frase entera, tamaños táctiles de 44 px en el reproductor.
+
+## Sobre las librerías de componentes
+JuanCho pasó un botón de shadcn con relleno desde el puntero y la pregunta era hacer un botón **original**. La regla JRGB no es «Tailwind no»: Tailwind y shadcn son buena tecnología y en otro proyecto pueden ser la decisión correcta. Lo que no vale es quedarse en el default genérico, que se reconoce a la legua y no acompaña a nadie.
+
+Aquí no se adoptaron porque el producto ya tiene su CSS y su identidad, y porque el efecto prestado no dice nada de una radio. La respuesta propia es la tecla de emisora: misma sensación táctil, metáfora del producto, sin dependencias nuevas.
 
 ## Pendiente del protocolo UX/UI
 Identity Sprint documentado con moodboard no digital, decisión tipográfica con tensión, theme en `jrgb-ui`, subir los dos mockups aprobados a Diseño, QA visual en Safari y Firefox y en móvil real, y el Distinctiveness Audit de 12 puntos antes de cualquier deploy a producción. La tarjeta al compartir usa Segoe UI porque es la tipografía de la interfaz; si el Sprint cambia de familia, hay que regenerarla.

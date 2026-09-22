@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type PointerEvent, type ReactNode } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { almacen } from '../almacen/local';
 import { useAlmacen } from '../almacen/useAlmacen';
 import { buscar, obtenerEmisora, obtenerEmisorasDeLugar, obtenerNoticias, obtenerPaises } from '../api/cliente';
@@ -390,31 +390,23 @@ function construirContenido(
 }
 
 /**
- * Atajo de la cabecera. Funciona como interruptor: si ya estás dentro, el mismo botón te
- * devuelve al inicio. Antes se quedaba encendido sin salida y desde las noticias no se veía
- * cómo volver a la música.
+ * Atajo de la cabecera, con forma de tecla de emisora: las de los aparatos de antes, que se
+ * hunden al pulsarlas, se quedan dentro y encienden la lucecita del dial. Toda la señal de
+ * estado está en el relieve y en la luz; el texto no cambia de color y mantiene su contraste.
  *
- * El relleno crece desde el punto por donde entra el puntero. Es CSS: el ratón solo apunta
- * dónde empieza el círculo.
+ * Funciona como interruptor: si ya estás dentro, el mismo botón te devuelve al inicio. Antes
+ * se quedaba encendido sin salida y desde las noticias no se veía cómo volver a la música.
  */
 function Atajo({ activo, alIr, children }: { activo: boolean; alIr: () => void; children: ReactNode }) {
   return (
     <button
       type="button"
-      className="ficha ficha--pequena ficha--relleno"
+      className="tecla"
       aria-current={activo ? 'true' : undefined}
-      onPointerEnter={marcarOrigen}
-      onPointerDown={marcarOrigen}
       onClick={() => (activo ? navegar({ tipo: 'inicio' }) : alIr())}
     >
-      {children}
+      <span className="tecla__texto">{children}</span>
       {activo && <span className="visualmente-oculto"> (pulsa otra vez para volver al inicio)</span>}
     </button>
   );
-}
-
-function marcarOrigen(evento: PointerEvent<HTMLElement>) {
-  const caja = evento.currentTarget.getBoundingClientRect();
-  evento.currentTarget.style.setProperty('--origen-x', `${evento.clientX - caja.left}px`);
-  evento.currentTarget.style.setProperty('--origen-y', `${evento.clientY - caja.top}px`);
 }

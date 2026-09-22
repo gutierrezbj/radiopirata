@@ -82,7 +82,7 @@ El norte lo puso JuanCho: la radio local de casa para quien vive fuera. Ver `doc
 - [x] Buscador predictivo: propone ciudades del índice y países del catálogo con su número de emisoras, con teclado (flechas, Enter, Escape) y patrón ARIA de combobox.
 - [x] Los acentos dan igual: todo se compara con `normalizar()`. «japon» encuentra Japón, «mexico» encuentra México.
 - [x] «Noticias», «Recientes» y «Favoritas» funcionan como interruptor: si ya estás dentro, te devuelven al inicio.
-- [x] Relleno que crece desde donde entra el puntero en esos tres atajos, en CSS propio.
+- [x] Botón propio, la **tecla de emisora**: cuerpo, hundido al pulsar, se queda dentro mientras está puesta y enciende la lucecita del dial. En los atajos de la cabecera y en los tres destinos comprobados del inicio. Sustituye al relleno desde el puntero, que era prestado y no decía nada de una radio.
 - [x] Amanecer en el horizonte del inicio, idea de JuanCho al ver la línea del planeta en pantalla ancha.
 - [ ] Mirar por qué una vez el globo no viajó de Caracas a Lisboa; no se ha podido reproducir.
 

@@ -57,8 +57,10 @@ export function Inicio({ indice, alReintentar, alSorprender, alSorprenderDeNoche
         {listo && indice.destinos.length > 0 && (
           <div className="inicio__destinos" aria-label="Destinos comprobados a mano">
             {indice.destinos.map((d) => (
-              <button key={d.id} type="button" className="ficha" onClick={() => navegar({ tipo: 'lugar', id: d.id })}>
-                {d.nombre}
+              // Los destinos comprobados a mano son las emisoras memorizadas del aparato:
+              // por eso llevan la misma tecla que los atajos de la cabecera.
+              <button key={d.id} type="button" className="tecla tecla--grande" onClick={() => navegar({ tipo: 'lugar', id: d.id })}>
+                <span className="tecla__texto">{d.nombre}</span>
               </button>
             ))}
           </div>
