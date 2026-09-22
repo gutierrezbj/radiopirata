@@ -26,6 +26,7 @@ Radios de 16 px en tarjetas y 10 px en fichas pequeñas, botones en píldora, po
 ## Detalles firma
 - **Dial de sintonía**: anillo alrededor del botón de reproducir que va de rojo a ámbar y a verde según entra la señal real (`readyState`).
 - **Relojes de láminas**: hora de allí y de aquí en dígitos partidos que caen al cambiar, cada uno en un marco fino amarillo.
+- **Dormir son dos zetas, no una luna**: el temporizador lleva `IconoDormir`. La luna ya significa modo nocturno en cualquier interfaz y confundía (JuanCho, 22 sep).
 - **Sello «comprobada»**: texto en amarillo con borde fino en las emisoras escuchadas a mano.
 - **Día y noche en el globo**: luz desde la posición real del sol.
 - **Antenas sobre el globo** (idea de JuanCho, 22 sep): cada ciudad del índice es una antena de radio (base, mástil, punta y tres anillos de emisión) en lugar de un cilindro sin significado. Apagada, los anillos son grises y discretos. Cuando suena una emisora de esa ciudad se encienden en **verde señal** y la antena crece un 45 %: desde cualquier parte del globo se ve dónde está sonando. La ciudad abierta lleva la antena en ámbar. Los anillos son circulares para que se lean igual desde cualquier ángulo.

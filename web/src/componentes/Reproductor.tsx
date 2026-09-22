@@ -16,7 +16,7 @@ import { DialSintonia } from './DialSintonia';
 import {
   IconoAnterior,
   IconoEstrella,
-  IconoLuna,
+  IconoDormir,
   IconoPausa,
   IconoPlay,
   IconoSiguiente,
@@ -117,7 +117,7 @@ export function Reproductor({ lugares }: Props) {
             title={dormir.activo ? 'Temporizador para dormir, puesto' : 'Dormirse con la radio puesta'}
             onClick={() => setMenuDormir((abierto) => !abierto)}
           >
-            <IconoLuna />
+            <IconoDormir />
           </button>
           {menuDormir && (
             <div id={idMenu} className="temporizador__menu" role="group" aria-label="Apagar dentro de">

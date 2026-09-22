@@ -88,6 +88,7 @@ El norte lo puso JuanCho: la radio local de casa para quien vive fuera. Ver `doc
 - [x] Los atajos del inicio, que eran enlaces subrayados sueltos, pasan a ser teclas como los del explorador: JuanCho los vio «deslucir el look tan premium».
 - [x] Antenas en el globo (idea de JuanCho: «los conitos» eran cilindros sin sentido): cada ciudad es una antena con tres anillos de emisión, que se encienden en verde y crecen cuando suena una emisora de esa ciudad. La ciudad abierta va en ámbar.
 - [ ] La antena verde solo se enciende si la reproducción arrancó desde una ciudad. Desde una búsqueda no hay ciudad y no se enciende ninguna: queda pendiente decidir si se quiere resolver la ciudad de cada emisora.
+- [x] El icono del temporizador pasa de luna a dos zetas: la luna se lee como modo nocturno.
 - [ ] Mirar por qué una vez el globo no viajó de Caracas a Lisboa; no se ha podido reproducir.
 
 ## E3 — Preparación pública · preparada el 2026-09-21

@@ -90,16 +90,17 @@ export function IconoCompartir({ tamano = 20 }: Props) {
   );
 }
 
-export function IconoLuna({ tamano = 20 }: Props) {
+/**
+ * Tres zetas: dormir. Antes era una luna, pero una luna en una interfaz se lee como
+ * «modo nocturno» y aquí lo que se apaga es la radio, no las luces (JuanCho, 22 sep).
+ */
+export function IconoDormir({ tamano = 20 }: Props) {
   return (
     <svg viewBox="0 0 24 24" width={tamano} height={tamano} aria-hidden="true" focusable="false">
-      <path
-        d="M14.5 3.5a8.5 8.5 0 1 0 6 14.3A7 7 0 0 1 14.5 3.5z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinejoin="round"
-      />
+      <g fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12.8 3.6h8.2l-8.2 8.2h8.2" />
+        <path d="M3.4 12.8h6.8l-6.8 6.8h6.8" />
+      </g>
     </svg>
   );
 }
