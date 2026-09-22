@@ -583,13 +583,15 @@ button {
   transform: translateX(-50%);
   border-radius: 50%;
   /*
-   * El planeta visto desde muy cerca, con el sol a punto de salir por la izquierda: la primera
-   * capa es esa luz templada en el filo, la segunda es la superficie a oscuras. Idea de JuanCho.
+   * El planeta visto desde muy cerca, con el sol a punto de salir por la izquierda. Tres capas:
+   * la luz templada del filo, los continentes (`planeta.svg`, la misma tierra que el globo del
+   * explorador, en proyección ortográfica) y la superficie a oscuras. Idea de JuanCho.
    * No se mueve: en el inicio no hay nada que animar y el portátil lo agradece.
    */
   background:
-    radial-gradient(64% 38% at 34% 0%, rgba(242, 203, 87, 0.16) 0%, rgba(242, 203, 87, 0.05) 42%, transparent 72%),
-    radial-gradient(circle at 50% 18%, #2c3236 0%, #1e2225 28%, #15181a 52%, var(--fondo) 70%);
+    radial-gradient(64% 38% at 34% 0%, rgba(242, 203, 87, 0.16) 0%, rgba(242, 203, 87, 0.05) 42%, transparent 72%) no-repeat,
+    url('/planeta.svg') center / 100% 100% no-repeat,
+    radial-gradient(circle at 50% 18%, #1c2023 0%, #191d20 28%, #141719 52%, var(--fondo) 70%) no-repeat;
   box-shadow:
     -12vw -36px 150px rgba(242, 203, 87, 0.16),
     0 -28px 100px rgba(242, 203, 87, 0.07),

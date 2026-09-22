@@ -29,7 +29,7 @@ Radios de 16 px en tarjetas y 10 px en fichas pequeñas, botones en píldora, po
 - **Sello «comprobada»**: texto en amarillo con borde fino en las emisoras escuchadas a mano.
 - **Día y noche en el globo**: luz desde la posición real del sol.
 - **Tecla de emisora** (22 sep): los atajos de la cabecera y los tres destinos comprobados del inicio son teclas con cuerpo, como las de un aparato de antes. Se hunden al pulsarlas, se quedan dentro mientras están puestas y encienden una lucecita ámbar bajo el texto. El estado se cuenta con relieve y con luz, nunca invirtiendo el color del texto: así el contraste no se mueve.
-- **Amanecer en el inicio** (idea de JuanCho, 22 sep): el borde del planeta entra por abajo con la luz templada del sol a punto de salir por la izquierda. Es un gradiente, no una animación: en el inicio no hay nada que mover.
+- **El planeta del inicio** (idea de JuanCho, 22 sep): el borde entra por abajo con los continentes dentro, en proyección ortográfica, y la luz templada del sol a punto de salir por la izquierda. La tierra sale de los mismos datos que el globo del explorador (`world-atlas/land-110m`) dibujada una vez por `web/scripts/generar-planeta.py` en `web/public/planeta.svg`: 34 kB de SVG en vez de medio mega de WebGL en una pantalla donde todavía no has elegido nada. Quieto, sin animación. La tierra queda más clara que el mar, como en el globo, y el texto de encima mantiene 6,2:1 sobre la tierra.
 - **Tarjeta al compartir** (1200×630): el mismo carbón y el horizonte ámbar del inicio, la marca arriba a la izquierda, el dominio en una píldora de borde fino y el titular de la portada. Sin fotos ni degradados de moda: se reconoce como la misma casa.
 
 ## Motion
