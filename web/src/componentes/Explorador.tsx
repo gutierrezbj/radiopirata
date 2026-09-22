@@ -135,6 +135,18 @@ export function Explorador({ ruta, indice, sorpresa, alConsumirSorpresa, alSorpr
           ? (remoto.datos.lugares[0] ?? null)
           : null);
   const buscando = remoto.estado === 'cargando';
+
+  // De qué ciudad sale lo que suena: se apunta el lugar que se estaba viendo al empezar cada
+  // emisora. Si la reproducción arrancó desde una búsqueda, no hay ciudad y no se enciende
+  // ninguna antena; no se deduce del país, que señalaría una ciudad donde no se está oyendo.
+  const [lugarSonandoId, setLugarSonandoId] = useState<string | null>(null);
+  const lugarALaVista = useRef<Lugar | null>(null);
+  lugarALaVista.current = lugarEnfocado;
+  const emisoraSonandoId = audioEstado.emisora?.id ?? null;
+  useEffect(() => {
+    setLugarSonandoId(emisoraSonandoId ? (lugarALaVista.current?.id ?? null) : null);
+  }, [emisoraSonandoId]);
+  const antenaEncendida = audioEstado.estado === 'playing' ? lugarSonandoId : null;
   const estadoPanel = remoto.estado === 'cargando' ? 'cargando' : remoto.estado === 'error' ? 'error' : 'listo';
 
   return (
@@ -212,6 +224,7 @@ export function Explorador({ ruta, indice, sorpresa, alConsumirSorpresa, alSorpr
                 lugarEnfocado={lugarEnfocado}
                 emisoras={visibles}
                 buscando={buscando}
+                lugarSonandoId={antenaEncendida}
                 alElegirLugar={(lugar) => navegar({ tipo: 'lugar', id: lugar.id })}
                 alPasarPorLugar={setHover}
               />

@@ -13,7 +13,7 @@ Curiosidad, calma y compañía. Una radio de antes, de noche, con la luz del dia
 | `--texto` | `#F5F0E6` | marfil, texto principal |
 | `--secundario` | `#B5B0A7` | gris cálido legible, texto secundario |
 | `--acento` | `#F2CB57` | amarillo cálido: botón principal, marcos, foco (10 %). Nunca como única señal de estado |
-| `--senal-mala` / `--senal-media` / `--senal-buena` | `#E2674E` / `#F0A44E` / `#7FD39A` | dial de sintonía y «en directo» |
+| `--senal-mala` / `--senal-media` / `--senal-buena` | `#E2674E` / `#F0A44E` / `#7FD39A` | dial de sintonía, «en directo» y las ondas de la antena que está sonando |
 
 Contraste medido: texto sobre fondo 16,3:1; secundario sobre superficie alta 6,6:1; señales del dial 4,8 / 7,7 / 8,9:1 sobre superficie. Todo por encima de AA.
 
@@ -28,6 +28,7 @@ Radios de 16 px en tarjetas y 10 px en fichas pequeñas, botones en píldora, po
 - **Relojes de láminas**: hora de allí y de aquí en dígitos partidos que caen al cambiar, cada uno en un marco fino amarillo.
 - **Sello «comprobada»**: texto en amarillo con borde fino en las emisoras escuchadas a mano.
 - **Día y noche en el globo**: luz desde la posición real del sol.
+- **Antenas sobre el globo** (idea de JuanCho, 22 sep): cada ciudad del índice es una antena de radio (base, mástil, punta y tres anillos de emisión) en lugar de un cilindro sin significado. Apagada, los anillos son grises y discretos. Cuando suena una emisora de esa ciudad se encienden en **verde señal** y la antena crece un 45 %: desde cualquier parte del globo se ve dónde está sonando. La ciudad abierta lleva la antena en ámbar. Los anillos son circulares para que se lean igual desde cualquier ángulo.
 - **Tecla de emisora** (22 sep): los atajos de la cabecera y los tres destinos comprobados del inicio son teclas con cuerpo, como las de un aparato de antes. Se hunden al pulsarlas, se quedan dentro mientras están puestas y encienden una lucecita ámbar bajo el texto. El estado se cuenta con relieve y con luz, nunca invirtiendo el color del texto: así el contraste no se mueve.
 - **El planeta del inicio** (idea de JuanCho, 22 sep): el borde entra por abajo con los continentes dentro, en proyección ortográfica, y la luz templada del sol a punto de salir por la izquierda. La tierra sale de los mismos datos que el globo del explorador (`world-atlas/land-110m`) dibujada una vez por `web/scripts/generar-planeta.py` en `web/public/planeta.svg`: 34 kB de SVG en vez de medio mega de WebGL en una pantalla donde todavía no has elegido nada. Quieto, sin animación. La tierra queda más clara que el mar, como en el globo, y el texto de encima mantiene 6,2:1 sobre la tierra.
 - **Tarjeta al compartir** (1200×630): el mismo carbón y el horizonte ámbar del inicio, la marca arriba a la izquierda, el dominio en una píldora de borde fino y el titular de la portada. Sin fotos ni degradados de moda: se reconoce como la misma casa.

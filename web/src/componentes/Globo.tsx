@@ -1,6 +1,16 @@
 import Globe, { type GlobeInstance } from 'globe.gl';
 import { useEffect, useRef } from 'react';
-import { AmbientLight, DirectionalLight, type MeshPhongMaterial } from 'three';
+import {
+  AmbientLight,
+  CylinderGeometry,
+  DirectionalLight,
+  Group,
+  Mesh,
+  MeshBasicMaterial,
+  SphereGeometry,
+  TorusGeometry,
+  type MeshPhongMaterial,
+} from 'three';
 import { feature } from 'topojson-client';
 import type { Topology } from 'topojson-specification';
 import tierra from 'world-atlas/land-110m.json';
@@ -15,19 +25,13 @@ interface Props {
   emisoras: Emisora[];
   /** Mientras se busca, el globo gira despacio: así se ve que la búsqueda está en marcha. */
   buscando?: boolean;
+  /** Ciudad de la que sale lo que está sonando: su antena emite en verde. */
+  lugarSonandoId?: string | null;
   alElegirLugar: (lugar: Lugar) => void;
   alPasarPorLugar: (lugar: Lugar | null) => void;
 }
 
 type InstanciaGlobo = GlobeInstance;
-
-interface PuntoLugar {
-  tipo: 'lugar';
-  lugar: Lugar;
-  enfocado: boolean;
-  lat: number;
-  lng: number;
-}
 
 interface PuntoEmisora {
   tipo: 'emisora';
@@ -36,7 +40,76 @@ interface PuntoEmisora {
   lng: number;
 }
 
-type Punto = PuntoLugar | PuntoEmisora;
+type Punto = PuntoEmisora;
+
+/** Una ciudad del índice sobre el globo, dibujada como una antena de radio. */
+interface Antena {
+  lugar: Lugar;
+  enfocado: boolean;
+  sonando: boolean;
+}
+
+const MARFIL = '#F5F0E6';
+const AMBAR = '#F2CB57';
+const GRIS = '#B5B0A7';
+const VERDE = '#7FD39A';
+/** Alto del mástil en unidades del globo, cuyo radio son 100. */
+const ALTO_MASTIL = 3.4;
+
+/**
+ * La antena de cada ciudad: base, mástil, punta y tres anillos de emisión encima. Apagada,
+ * los anillos son grises y discretos; cuando suena una emisora de esa ciudad se encienden en
+ * verde. Los anillos son circulares a propósito: así se leen igual desde cualquier ángulo.
+ */
+function crearAntena({ enfocado, sonando }: Antena): Group {
+  const grupo = new Group();
+  const color = enfocado ? AMBAR : MARFIL;
+
+  const base = new Mesh(
+    new CylinderGeometry(0.7, 0.9, 0.3, 10),
+    new MeshBasicMaterial({ color, transparent: true, opacity: enfocado ? 0.9 : 0.5 }),
+  );
+  base.rotation.x = Math.PI / 2;
+  base.position.z = 0.15;
+  grupo.add(base);
+
+  const mastil = new Mesh(
+    new CylinderGeometry(0.16, 0.24, ALTO_MASTIL, 6),
+    new MeshBasicMaterial({ color, transparent: true, opacity: enfocado ? 1 : 0.75 }),
+  );
+  mastil.rotation.x = Math.PI / 2;
+  mastil.position.z = ALTO_MASTIL / 2;
+  grupo.add(mastil);
+
+  const punta = new Mesh(new SphereGeometry(0.34, 10, 8), new MeshBasicMaterial({ color: sonando ? VERDE : color }));
+  punta.position.z = ALTO_MASTIL;
+  grupo.add(punta);
+
+  const anillos: Array<[number, number]> = [
+    [0.55, 0.45],
+    [0.95, 0.9],
+    [1.4, 1.4],
+  ];
+  for (const [radio, altura] of anillos) {
+    const onda = new Mesh(
+      new TorusGeometry(radio, 0.09, 6, 22),
+      new MeshBasicMaterial({
+        color: sonando ? VERDE : GRIS,
+        transparent: true,
+        opacity: sonando ? 0.95 - radio * 0.25 : 0.3 - radio * 0.08,
+      }),
+    );
+    onda.position.z = ALTO_MASTIL + altura;
+    grupo.add(onda);
+  }
+
+  // La ciudad abierta y la que suena se ven un poco mas grandes: a esta distancia, si no,
+  // la antena encendida se pierde entre las demas.
+  const escala = sonando ? 1.45 : enfocado ? 1.2 : 1;
+  grupo.scale.set(escala, escala, escala);
+
+  return grupo;
+}
 
 const ALTITUD_DESTINO = 1.6;
 /** Tiempo sin tocar el globo tras el cual se deja de dibujar. Nada se mueve solo, así que no se pierde nada. */
@@ -53,7 +126,15 @@ const poligonos = superficie.type === 'FeatureCollection' ? superficie.features 
  * Los puntos son las ciudades del índice propio; las emisoras solo aparecen si el catálogo
  * da coordenadas para ellas, nunca inventadas a partir del país.
  */
-export function Globo({ lugares, lugarEnfocado, emisoras, buscando = false, alElegirLugar, alPasarPorLugar }: Props) {
+export function Globo({
+  lugares,
+  lugarEnfocado,
+  emisoras,
+  buscando = false,
+  lugarSonandoId = null,
+  alElegirLugar,
+  alPasarPorLugar,
+}: Props) {
   const contenedor = useRef<HTMLDivElement>(null);
   const globo = useRef<InstanciaGlobo | null>(null);
   const callbacks = useRef({ alElegirLugar, alPasarPorLugar });
@@ -82,22 +163,22 @@ export function Globo({ lugares, lugarEnfocado, emisoras, buscando = false, alEl
       .polygonSideColor(() => 'rgba(0,0,0,0)')
       .polygonStrokeColor(() => '#3B4145')
       .polygonAltitude(0.004)
+      .objectLat((d) => (d as Antena).lugar.coordenadas.lat)
+      .objectLng((d) => (d as Antena).lugar.coordenadas.lng)
+      .objectAltitude(0)
+      .objectFacesSurface(true)
+      .objectThreeObject((d) => crearAntena(d as Antena))
+      .objectLabel((d) => etiquetaDeLugar((d as Antena).lugar))
+      .onObjectClick((d) => callbacks.current.alElegirLugar((d as Antena).lugar))
+      .onObjectHover((d) => callbacks.current.alPasarPorLugar(d ? (d as Antena).lugar : null))
       .pointLat((p) => (p as Punto).lat)
       .pointLng((p) => (p as Punto).lng)
-      .pointColor((p) => colorDePunto(p as Punto))
-      .pointAltitude((p) => ((p as Punto).tipo === 'lugar' ? 0.02 : 0.008))
-      .pointRadius((p) => radioDePunto(p as Punto))
+      .pointColor(() => colorDePunto())
+      .pointAltitude(0.008)
+      .pointRadius(() => radioDePunto())
       .pointsMerge(false)
       .pointLabel((p) => etiquetaDePunto(p as Punto))
-      .onPointClick((p) => {
-        const punto = p as Punto;
-        if (punto.tipo === 'lugar') callbacks.current.alElegirLugar(punto.lugar);
-      })
-      .onPointHover((p) => {
-        const punto = p as Punto | null;
-        callbacks.current.alPasarPorLugar(punto && punto.tipo === 'lugar' ? punto.lugar : null);
-      })
-      .showPointerCursor((tipo, datos) => tipo === 'label' || (tipo === 'point' && (datos as Punto).tipo === 'lugar'))
+      .showPointerCursor((tipo) => tipo === 'label' || tipo === 'object')
       .labelLat((d) => (d as Lugar).coordenadas.lat)
       .labelLng((d) => (d as Lugar).coordenadas.lng)
       // La fuente que usa la librería para las etiquetas no tiene acentos y pinta «M?xico».
@@ -227,23 +308,29 @@ export function Globo({ lugares, lugarEnfocado, emisoras, buscando = false, alEl
   useEffect(() => {
     const g = globo.current;
     if (!g) return;
-    const puntos: Punto[] = [
-      ...lugares.map<PuntoLugar>((lugar) => ({
-        tipo: 'lugar',
+    g.objectsData(
+      lugares.map<Antena>((lugar) => ({
         lugar,
         enfocado: lugar.id === lugarEnfocado?.id,
-        lat: lugar.coordenadas.lat,
-        lng: lugar.coordenadas.lng,
+        sonando: lugar.id === lugarSonandoId,
       })),
-      ...emisoras.flatMap<PuntoEmisora>((emisora) =>
+    );
+    despertar.current();
+  }, [lugares, lugarEnfocado, lugarSonandoId]);
+
+  useEffect(() => {
+    const g = globo.current;
+    if (!g) return;
+    // Las emisoras solo se pintan si el catálogo da coordenadas; nunca se deducen del país.
+    g.pointsData(
+      emisoras.flatMap<Punto>((emisora) =>
         emisora.coordenadas
           ? [{ tipo: 'emisora', emisora, lat: emisora.coordenadas.lat, lng: emisora.coordenadas.lng }]
           : [],
       ),
-    ];
-    g.pointsData(puntos);
+    );
     despertar.current();
-  }, [lugares, emisoras, lugarEnfocado]);
+  }, [emisoras]);
 
   useEffect(() => {
     const g = globo.current;
@@ -276,20 +363,20 @@ export function Globo({ lugares, lugarEnfocado, emisoras, buscando = false, alEl
   return <div ref={contenedor} className="globo" aria-hidden="true" />;
 }
 
-function colorDePunto(punto: Punto): string {
-  if (punto.tipo === 'emisora') return '#F5F0E6';
-  return punto.enfocado ? '#F2CB57' : 'rgba(245, 240, 230, 0.55)';
+function colorDePunto(): string {
+  return MARFIL;
 }
 
-function radioDePunto(punto: Punto): number {
-  if (punto.tipo === 'emisora') return 0.22;
-  return punto.enfocado ? 0.55 : 0.3;
+function radioDePunto(): number {
+  return 0.22;
 }
 
 function etiquetaDePunto(punto: Punto): string {
-  return punto.tipo === 'lugar'
-    ? `<div class="globo__etiqueta">${escapar(punto.lugar.nombre)}<small>${escapar(punto.lugar.pais)}</small></div>`
-    : `<div class="globo__etiqueta">${escapar(punto.emisora.nombre)}<small>según el catálogo</small></div>`;
+  return `<div class="globo__etiqueta">${escapar(punto.emisora.nombre)}<small>según el catálogo</small></div>`;
+}
+
+function etiquetaDeLugar(lugar: Lugar): string {
+  return `<div class="globo__etiqueta">${escapar(lugar.nombre)}<small>${escapar(lugar.pais)}</small></div>`;
 }
 
 function sinAcentos(texto: string): string {
