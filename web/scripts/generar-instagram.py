@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
-"""Dibuja la imagen vertical (1080x1350) para el lanzamiento en Instagram.
+"""Dibuja las imágenes del lanzamiento en Instagram: feed (1080x1350) y stories (1080x1920).
 
 Mismo mundo que la aplicación: el planeta con los continentes en proyección
 ortográfica, la luz del amanecer en el filo y las antenas de unas cuantas ciudades,
 con la de Caracas encendida en verde como cuando algo está sonando.
 
     python web/scripts/generar-instagram.py
+
+En stories el texto se queda en la franja central: arriba manda el nombre de la cuenta
+y abajo van el sticker del enlace y la barra de responder.
 
 Necesita Pillow y las fuentes Segoe UI de Windows. El resultado se versiona en
 `marketing/` y no se sirve desde la web: es material de campaña, no de producto.
@@ -18,9 +21,7 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 RAIZ = Path(__file__).resolve().parents[2]
 TOPOLOGIA = RAIZ / "node_modules" / "world-atlas" / "land-110m.json"
-DESTINO = RAIZ / "marketing" / "instagram-1080x1350.png"
 
-ANCHO, ALTO = 1080, 1350
 FONDO = (18, 20, 22)
 TEXTO = (245, 240, 230)
 SECUNDARIO = (181, 176, 167)
@@ -29,13 +30,40 @@ VERDE = (127, 211, 154)
 TIERRA = (42, 47, 51)
 MAR = (26, 30, 33)
 
-# El planeta: centro por debajo del lienzo, así se ve la parte de arriba de la esfera.
-CENTRO = (ANCHO // 2, 1430)
-RADIO = 700
 # El centro de la proyeccion va al sur: lo que se ve es la parte de arriba del disco, y asi
 # el Atlantico entero (America a la izquierda, Europa y Africa a la derecha) entra en cuadro.
 LATITUD_CENTRO = -30.0
 LONGITUD_CENTRO = -45.0
+
+# Los dos formatos. El planeta siempre tiene el centro por debajo del lienzo: se ve la parte
+# de arriba de la esfera, con el filo cruzando la imagen.
+FORMATOS = {
+    "feed": {
+        "fichero": "instagram-1080x1350.png",
+        "tamano": (1080, 1350),
+        "centro": (540, 1430),
+        "radio": 700,
+        "marca": (84, 74),
+        "titulo": (84, 250),
+        "subtitulo": (84, 500),
+        "pildora": (84, 640),
+    },
+    "stories": {
+        "fichero": "instagram-stories-1080x1920.png",
+        "tamano": (1080, 1920),
+        "centro": (540, 2280),
+        "radio": 980,
+        "marca": (84, 300),
+        "titulo": (84, 470),
+        "subtitulo": (84, 720),
+        "pildora": (84, 860),
+    },
+}
+
+# Se rellenan al dibujar cada formato.
+ANCHO, ALTO = FORMATOS["feed"]["tamano"]
+CENTRO = FORMATOS["feed"]["centro"]
+RADIO = FORMATOS["feed"]["radio"]
 
 # Ciudades con antena. La primera está sonando.
 CIUDADES = [
@@ -183,32 +211,47 @@ def radio(dibujo: ImageDraw.ImageDraw, x: int, y: int, escala: float) -> None:
     dibujo.line([p(11, 11), p(19, 6)], fill=TEXTO, width=grosor)
 
 
-def principal() -> None:
+def dibujar(nombre: str, formato: dict) -> None:
+    global ANCHO, ALTO, CENTRO, RADIO
+    ANCHO, ALTO = formato["tamano"]
+    CENTRO = formato["centro"]
+    RADIO = formato["radio"]
+
     lienzo = Image.new("RGB", (ANCHO, ALTO), FONDO)
     dibujar_planeta(lienzo)
     dibujo = ImageDraw.Draw(lienzo)
     dibujar_antenas(dibujo)
 
-    radio(dibujo, 84, 74, 2.6)
-    dibujo.text((186, 80), "RadioPirata", font=fuente("seguisb.ttf", 50), fill=TEXTO)
+    x, y = formato["marca"]
+    radio(dibujo, x, y, 2.6)
+    dibujo.text((x + 102, y + 6), "RadioPirata", font=fuente("seguisb.ttf", 50), fill=TEXTO)
 
     titulo = fuente("segoeuib.ttf", 96)
-    dibujo.text((84, 250), "La radio de casa,", font=titulo, fill=TEXTO)
-    dibujo.text((84, 360), "estés donde estés.", font=titulo, fill=TEXTO)
+    x, y = formato["titulo"]
+    dibujo.text((x, y), "La radio de casa,", font=titulo, fill=TEXTO)
+    dibujo.text((x, y + 110), "estés donde estés.", font=titulo, fill=TEXTO)
 
     normal = fuente("segoeui.ttf", 40)
-    dibujo.text((84, 500), "Giras el globo, eliges ciudad", font=normal, fill=SECUNDARIO)
-    dibujo.text((84, 554), "y suena su radio local, en directo.", font=normal, fill=SECUNDARIO)
+    x, y = formato["subtitulo"]
+    dibujo.text((x, y), "Giras el globo, eliges ciudad", font=normal, fill=SECUNDARIO)
+    dibujo.text((x, y + 54), "y suena su radio local, en directo.", font=normal, fill=SECUNDARIO)
 
     etiqueta = "radiopirata.jrgblanco.com"
     tipo = fuente("seguisb.ttf", 34)
     ancho_texto = dibujo.textlength(etiqueta, font=tipo)
-    dibujo.rounded_rectangle([84, 640, 84 + ancho_texto + 64, 710], radius=35, outline=ACENTO, width=2)
-    dibujo.text((116, 658), etiqueta, font=tipo, fill=ACENTO)
+    x, y = formato["pildora"]
+    dibujo.rounded_rectangle([x, y, x + ancho_texto + 64, y + 70], radius=35, outline=ACENTO, width=2)
+    dibujo.text((x + 32, y + 18), etiqueta, font=tipo, fill=ACENTO)
 
-    DESTINO.parent.mkdir(parents=True, exist_ok=True)
-    lienzo.save(DESTINO, "PNG", optimize=True)
-    print(f"{DESTINO}  {DESTINO.stat().st_size // 1024} kB")
+    destino = RAIZ / "marketing" / formato["fichero"]
+    destino.parent.mkdir(parents=True, exist_ok=True)
+    lienzo.save(destino, "PNG", optimize=True)
+    print(f"{nombre}: {destino.name}  {destino.stat().st_size // 1024} kB")
+
+
+def principal() -> None:
+    for nombre, formato in FORMATOS.items():
+        dibujar(nombre, formato)
 
 
 if __name__ == "__main__":
