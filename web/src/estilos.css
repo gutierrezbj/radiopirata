@@ -338,6 +338,8 @@ button {
   font-size: 0.78rem;
 }
 
+/* Solo para enlaces dentro de una frase, como el «Reintentar» de un aviso. Los atajos de
+   cabecera son teclas: un subrayado suelto ahí abarata el conjunto. */
 .enlace {
   background: none;
   border: 0;
@@ -522,7 +524,9 @@ button {
 .inicio__atajos {
   display: flex;
   align-items: center;
-  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .inicio__centro {

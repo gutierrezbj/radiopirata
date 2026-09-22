@@ -23,17 +23,17 @@ export function Inicio({ indice, alReintentar, alSorprender, alSorprenderDeNoche
           <span className="marca__texto">RadioPirata</span>
         </span>
         <nav className="inicio__atajos" aria-label="Lo tuyo">
-          <button type="button" className="enlace" onClick={() => navegar({ tipo: 'paises' })}>
-            Noticias
+          <button type="button" className="tecla" onClick={() => navegar({ tipo: 'paises' })}>
+            <span className="tecla__texto">Noticias</span>
           </button>
           {disponible && recientes.length > 0 && (
-            <button type="button" className="enlace" onClick={() => navegar({ tipo: 'recientes' })}>
-              Recientes
+            <button type="button" className="tecla" onClick={() => navegar({ tipo: 'recientes' })}>
+              <span className="tecla__texto">Recientes</span>
             </button>
           )}
           {disponible && (
-            <button type="button" className="enlace" onClick={() => navegar({ tipo: 'favoritas' })}>
-              Mis favoritas{favoritas.length > 0 ? ` (${favoritas.length})` : ''}
+            <button type="button" className="tecla" onClick={() => navegar({ tipo: 'favoritas' })}>
+              <span className="tecla__texto">Mis favoritas{favoritas.length > 0 ? ` (${favoritas.length})` : ''}</span>
             </button>
           )}
         </nav>

@@ -85,6 +85,7 @@ El norte lo puso JuanCho: la radio local de casa para quien vive fuera. Ver `doc
 - [x] Botón propio, la **tecla de emisora**: cuerpo, hundido al pulsar, se queda dentro mientras está puesta y enciende la lucecita del dial. En los atajos de la cabecera y en los tres destinos comprobados del inicio. Sustituye al relleno desde el puntero, que era prestado y no decía nada de una radio.
 - [x] Amanecer en el horizonte del inicio, idea de JuanCho al ver la línea del planeta en pantalla ancha.
 - [x] El mapa del mundo dentro de esa circunferencia, para que sea un globo de verdad: SVG de 34 kB generado con `web/scripts/generar-planeta.py` desde los mismos datos que el globo del explorador.
+- [x] Los atajos del inicio, que eran enlaces subrayados sueltos, pasan a ser teclas como los del explorador: JuanCho los vio «deslucir el look tan premium».
 - [x] Antenas en el globo (idea de JuanCho: «los conitos» eran cilindros sin sentido): cada ciudad es una antena con tres anillos de emisión, que se encienden en verde y crecen cuando suena una emisora de esa ciudad. La ciudad abierta va en ámbar.
 - [ ] La antena verde solo se enciende si la reproducción arrancó desde una ciudad. Desde una búsqueda no hay ciudad y no se enciende ninguna: queda pendiente decidir si se quiere resolver la ciudad de cada emisora.
 - [ ] Mirar por qué una vez el globo no viajó de Caracas a Lisboa; no se ha podido reproducir.
