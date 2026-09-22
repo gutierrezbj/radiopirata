@@ -76,6 +76,16 @@ El norte lo puso JuanCho: la radio local de casa para quien vive fuera. Ver `doc
 - [ ] Ver en el log del healthcheck una pasada con `radiopirata-web` (el log solo resume alertas; hasta ahora `alerts=0`).
 - [x] SA99 completo: documento de Mongo con el dominio real y `RadioPirata` añadido a `SEED_SERVERS` en `service.py`. No es otro proyecto (corrección de JuanCho).
 
+## Retoques del 2026-09-22 (peticiones de JuanCho)
+- [x] El globo gira despacio mientras el catálogo responde y se para al llegar; sin giro con `prefers-reduced-motion`. «Si no se mueve da la sensación de que no está buscando».
+- [x] Al buscar un país, el globo viaja a la ciudad que el índice propio reconoce (Francia → París). Sin ciudad en el índice, gira mientras busca y se queda donde está: no se inventan coordenadas.
+- [x] Buscador predictivo: propone ciudades del índice y países del catálogo con su número de emisoras, con teclado (flechas, Enter, Escape) y patrón ARIA de combobox.
+- [x] Los acentos dan igual: todo se compara con `normalizar()`. «japon» encuentra Japón, «mexico» encuentra México.
+- [x] «Noticias», «Recientes» y «Favoritas» funcionan como interruptor: si ya estás dentro, te devuelven al inicio.
+- [x] Relleno que crece desde donde entra el puntero en esos tres atajos, en CSS propio.
+- [x] Amanecer en el horizonte del inicio, idea de JuanCho al ver la línea del planeta en pantalla ancha.
+- [ ] Mirar por qué una vez el globo no viajó de Caracas a Lisboa; no se ha podido reproducir.
+
 ## E3 — Preparación pública · preparada el 2026-09-21
 - [x] Rendimiento: compresión en el servidor, caché inmutable para ficheros con hash, densidad de píxeles del globo según el equipo y globo que deja de dibujarse cuando nadie lo toca.
 - [x] Medir lo que se descarga de verdad: 82 kB en el inicio; el globo son otros 550 kB y solo los paga quien entra al explorador.

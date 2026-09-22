@@ -210,6 +210,52 @@ button {
   font-size: 0.92rem;
 }
 
+/*
+ * El relleno nace en el punto exacto por donde entra el puntero (lo marca el componente en
+ * --origen-x/--origen-y) y cubre la píldora entera. Con el teclado sale del centro.
+ */
+.ficha--relleno {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  --origen-x: 50%;
+  --origen-y: 50%;
+  transition: border-color 160ms ease, color 240ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ficha--relleno::before {
+  content: '';
+  position: absolute;
+  left: var(--origen-x);
+  top: var(--origen-y);
+  width: 22rem;
+  height: 22rem;
+  margin: -11rem 0 0 -11rem;
+  border-radius: 50%;
+  background: var(--acento);
+  transform: scale(0);
+  z-index: -1;
+  transition: transform 420ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ficha--relleno:hover,
+.ficha--relleno:focus-visible {
+  color: var(--fondo);
+  border-color: var(--acento);
+  font-weight: 600;
+}
+
+.ficha--relleno:hover::before,
+.ficha--relleno:focus-visible::before {
+  transform: scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ficha--relleno::before {
+    transition: none;
+  }
+}
+
 .ficha--filtro {
   padding: 6px 12px;
   font-size: 0.85rem;
@@ -340,6 +386,50 @@ button {
   font-size: 0.9rem;
 }
 
+.sugerencias {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: var(--superficie-alta);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-pequeno);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+  text-align: left;
+}
+
+.sugerencias--ocultas {
+  display: none;
+}
+
+.sugerencia {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.sugerencia--activa {
+  background: rgba(242, 203, 87, 0.14);
+}
+
+.sugerencia__texto {
+  font-weight: 600;
+}
+
+.sugerencia__detalle {
+  color: var(--secundario);
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
 .buscador__lupa {
   display: grid;
   place-items: center;
@@ -430,8 +520,18 @@ button {
   height: 170vw;
   transform: translateX(-50%);
   border-radius: 50%;
-  background: radial-gradient(circle at 50% 18%, #2c3236 0%, #1e2225 28%, #15181a 52%, var(--fondo) 70%);
-  box-shadow: 0 -30px 120px rgba(242, 203, 87, 0.1), 0 -2px 0 rgba(245, 240, 230, 0.08);
+  /*
+   * El planeta visto desde muy cerca, con el sol a punto de salir por la izquierda: la primera
+   * capa es esa luz templada en el filo, la segunda es la superficie a oscuras. Idea de JuanCho.
+   * No se mueve: en el inicio no hay nada que animar y el portátil lo agradece.
+   */
+  background:
+    radial-gradient(64% 38% at 34% 0%, rgba(242, 203, 87, 0.16) 0%, rgba(242, 203, 87, 0.05) 42%, transparent 72%),
+    radial-gradient(circle at 50% 18%, #2c3236 0%, #1e2225 28%, #15181a 52%, var(--fondo) 70%);
+  box-shadow:
+    -12vw -36px 150px rgba(242, 203, 87, 0.16),
+    0 -28px 100px rgba(242, 203, 87, 0.07),
+    0 -2px 0 rgba(245, 240, 230, 0.12);
   pointer-events: none;
 }
 

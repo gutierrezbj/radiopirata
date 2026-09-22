@@ -13,6 +13,8 @@ interface Props {
   lugares: Lugar[];
   lugarEnfocado: Lugar | null;
   emisoras: Emisora[];
+  /** Mientras se busca, el globo gira despacio: así se ve que la búsqueda está en marcha. */
+  buscando?: boolean;
   alElegirLugar: (lugar: Lugar) => void;
   alPasarPorLugar: (lugar: Lugar | null) => void;
 }
@@ -51,7 +53,7 @@ const poligonos = superficie.type === 'FeatureCollection' ? superficie.features 
  * Los puntos son las ciudades del índice propio; las emisoras solo aparecen si el catálogo
  * da coordenadas para ellas, nunca inventadas a partir del país.
  */
-export function Globo({ lugares, lugarEnfocado, emisoras, alElegirLugar, alPasarPorLugar }: Props) {
+export function Globo({ lugares, lugarEnfocado, emisoras, buscando = false, alElegirLugar, alPasarPorLugar }: Props) {
   const contenedor = useRef<HTMLDivElement>(null);
   const globo = useRef<InstanciaGlobo | null>(null);
   const callbacks = useRef({ alElegirLugar, alPasarPorLugar });
@@ -60,6 +62,9 @@ export function Globo({ lugares, lugarEnfocado, emisoras, alElegirLugar, alPasar
   const primerEnfoque = useRef(true);
   /** Vuelve a dibujar el globo y programa la siguiente siesta. La coloca el efecto de montaje. */
   const despertar = useRef<(durante?: number) => void>(() => undefined);
+  /** Mantiene el globo dibujando sin siestas mientras dura el giro de búsqueda. */
+  const mantenerDespierto = useRef<(valor: boolean) => void>(() => undefined);
+  const girar = useRef<(valor: boolean) => void>(() => undefined);
 
   useEffect(() => {
     const el = contenedor.current;
@@ -122,7 +127,7 @@ export function Globo({ lugares, lugarEnfocado, emisoras, alElegirLugar, alPasar
 
     g.renderer().setPixelRatio(pixelRatioAdecuado());
     const controles = g.controls();
-    // Sin giro automático: el lugar elegido debe quedarse a la vista.
+    // Quieto por defecto: el lugar elegido debe quedarse a la vista. Solo gira mientras se busca.
     controles.autoRotate = false;
     controles.enableDamping = !menosMovimiento;
     controles.minDistance = 140;
@@ -140,8 +145,9 @@ export function Globo({ lugares, lugarEnfocado, emisoras, alElegirLugar, alPasar
     // segundo. Se duerme tras unos segundos de calma y se despierta con cualquier interacción.
     let siesta: ReturnType<typeof setTimeout> | null = null;
     let dormido = false;
+    let sinSiestas = false;
     const dormir = () => {
-      if (dormido) return;
+      if (dormido || sinSiestas) return;
       dormido = true;
       g.pauseAnimation();
     };
@@ -154,6 +160,16 @@ export function Globo({ lugares, lugarEnfocado, emisoras, alElegirLugar, alPasar
       siesta = setTimeout(dormir, durante);
     };
     despertar.current = activar;
+    mantenerDespierto.current = (valor) => {
+      sinSiestas = valor;
+      activar();
+    };
+    // El giro automático solo se enciende mientras se busca: con un lugar elegido, el sitio
+    // tiene que quedarse quieto delante de quien mira.
+    girar.current = (valor) => {
+      controles.autoRotate = valor && !menosMovimiento;
+      controles.autoRotateSpeed = 0.55;
+    };
     activar();
     const relojSolar = setInterval(() => {
       colocarSol();
@@ -188,6 +204,8 @@ export function Globo({ lugares, lugarEnfocado, emisoras, alElegirLugar, alPasar
       if (siesta !== null) clearTimeout(siesta);
       clearInterval(relojSolar);
       despertar.current = () => undefined;
+      mantenerDespierto.current = () => undefined;
+      girar.current = () => undefined;
       observador.disconnect();
       g.pauseAnimation();
       g._destructor();
@@ -243,6 +261,17 @@ export function Globo({ lugares, lugarEnfocado, emisoras, alElegirLugar, alPasar
       duracion,
     );
   }, [lugarEnfocado]);
+
+  // Mientras el catálogo responde, el globo gira despacio. Es la única señal de que algo
+  // está pasando: sin ella parece que la búsqueda no ha salido.
+  useEffect(() => {
+    girar.current(buscando);
+    mantenerDespierto.current(buscando);
+    return () => {
+      girar.current(false);
+      mantenerDespierto.current(false);
+    };
+  }, [buscando]);
 
   return <div ref={contenedor} className="globo" aria-hidden="true" />;
 }

@@ -28,10 +28,13 @@ Radios de 16 px en tarjetas y 10 px en fichas pequeñas, botones en píldora, po
 - **Relojes de láminas**: hora de allí y de aquí en dígitos partidos que caen al cambiar, cada uno en un marco fino amarillo.
 - **Sello «comprobada»**: texto en amarillo con borde fino en las emisoras escuchadas a mano.
 - **Día y noche en el globo**: luz desde la posición real del sol.
+- **Amanecer en el inicio** (idea de JuanCho, 22 sep): el borde del planeta entra por abajo con la luz templada del sol a punto de salir por la izquierda. Es un gradiente, no una animación: en el inicio no hay nada que mover.
 - **Tarjeta al compartir** (1200×630): el mismo carbón y el horizonte ámbar del inicio, la marca arriba a la izquierda, el dominio en una píldora de borde fino y el titular de la portada. Sin fotos ni degradados de moda: se reconoce como la misma casa.
 
 ## Motion
-Vocabulario limitado a tres patrones: transición de 160 ms `ease` en bordes y fondos de controles; viaje de cámara del globo de 1 200 ms; caída de lámina en 320 ms + 320 ms con `ease-in` / `ease-out`. Nunca lineal. Con `prefers-reduced-motion` no hay transiciones, la cámara salta y los dígitos cambian sin caer. El globo deja de dibujarse tras 3 s sin interacción.
+Vocabulario limitado a cinco patrones: transición de 160 ms `ease` en bordes y fondos de controles; viaje de cámara del globo de 1 200 ms; caída de lámina en 320 ms + 320 ms con `ease-in` / `ease-out`. Nunca lineal. Se añaden dos el 22 sep 2026: **giro de búsqueda**, el globo girando a 0,55 sobre su eje mientras el catálogo responde, y **relleno desde el origen**, un círculo del color de acento que crece 420 ms desde el punto por donde entra el puntero en los atajos de la cabecera. Con `prefers-reduced-motion` no hay transiciones, la cámara salta, los dígitos cambian sin caer y el globo no gira. El globo deja de dibujarse tras 3 s sin interacción, salvo mientras dura el giro de búsqueda.
+
+El giro no es decoración: sin él, buscar parecía no hacer nada. El relleno sí lo es, y por eso se queda solo en tres botones.
 
 ## Componentes
 Inicio (pregunta, buscador, fichas de destinos comprobados, Sorpréndeme, Donde ya es de noche) · Explorador (cabecera con buscador compacto y atajos, panel izquierdo o hoja inferior en móvil, escena del globo) · Lista de emisoras (fila con acción principal, estrella y compartir) · Reproductor persistente (anterior, dial + play/pausa, siguiente, temporizador, favorita, compartir, volumen) · Panel de países · Relojes.

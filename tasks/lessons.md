@@ -19,6 +19,9 @@ Patrimonio del producto. **Nunca se borra**, solo se acumula. Se lee al empezar 
 - **La fuente de las etiquetas 3D no tiene acentos.** Regla: sobre el globo, nombres sin tildes; el nombre completo va en el panel.
 - **El servidor lee `index.html` una vez.** Un build nuevo no se ve hasta reiniciar. Regla: reiniciar tras cada build; en dev, reiniciar el visor antes de comprobar.
 - **El foco no se roba a quien abre un enlace.** Regla: mover el foco al título solo si hubo navegación dentro de la app (`huboNavegacion()`).
+- **Quieto parece roto.** (22 sep) JuanCho: «si no se mueve da la sensación de que no está buscando». Ahorrar batería dejando el globo inmóvil borró la única señal de que la búsqueda estaba en marcha. Regla: cuando se quita movimiento por rendimiento, comprobar que algo sigue contando lo que pasa.
+- **Un atajo encendido tiene que apagarse.** (22 sep) «Noticias» se quedaba marcado y desde esa vista no se veía cómo volver a la música. Regla: todo atajo que marca dónde estás debe devolver al inicio al pulsarlo otra vez.
+- **Los acentos no se le piden a nadie.** (22 sep) Regla: toda comparación de texto pasa por `normalizar()`; escribir «japon» o «mexico» tiene que bastar, y las sugerencias se ofrecen mientras se escribe en vez de esperar al Enter.
 - **Un fallo puede parecer otro.** La consola de una pestaña reutilizada conserva errores de políticas ya cambiadas. Regla: comprobar en pestaña nueva antes de perseguir un fantasma.
 
 ## Proceso y entorno

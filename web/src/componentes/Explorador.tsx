@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type PointerEvent, type ReactNode } from 'react';
 import { almacen } from '../almacen/local';
 import { useAlmacen } from '../almacen/useAlmacen';
 import { buscar, obtenerEmisora, obtenerEmisorasDeLugar, obtenerNoticias, obtenerPaises } from '../api/cliente';
@@ -125,7 +125,16 @@ export function Explorador({ ruta, indice, sorpresa, alConsumirSorpresa, alSorpr
 
   const lugarEnfocado =
     lugarDelIndice ??
-    (remoto.estado === 'lugar' ? remoto.datos.lugar : remoto.estado === 'noticias' ? remoto.datos.lugarSugerido : null);
+    (remoto.estado === 'lugar'
+      ? remoto.datos.lugar
+      : remoto.estado === 'noticias'
+        ? remoto.datos.lugarSugerido
+        : // Al buscar «Francia» el catálogo no da un lugar, pero el índice propio sí reconoce
+          // París: el globo viaja hasta allí en vez de quedarse donde estaba.
+          remoto.estado === 'busqueda'
+          ? (remoto.datos.lugares[0] ?? null)
+          : null);
+  const buscando = remoto.estado === 'cargando';
   const estadoPanel = remoto.estado === 'cargando' ? 'cargando' : remoto.estado === 'error' ? 'error' : 'listo';
 
   return (
@@ -143,33 +152,18 @@ export function Explorador({ ruta, indice, sorpresa, alConsumirSorpresa, alSorpr
           inicial={ruta.tipo === 'busqueda' ? ruta.q : ''}
         />
         <nav className="explorador__atajos" aria-label="Lo tuyo">
-          <button
-            type="button"
-            className="ficha ficha--pequena"
-            aria-current={ruta.tipo === 'paises' || ruta.tipo === 'noticias' ? 'true' : undefined}
-            onClick={() => navegar({ tipo: 'paises' })}
-          >
+          <Atajo activo={ruta.tipo === 'paises' || ruta.tipo === 'noticias'} alIr={() => navegar({ tipo: 'paises' })}>
             Noticias
-          </button>
+          </Atajo>
           {datosAlmacen.disponible && datosAlmacen.recientes.length > 0 && (
-            <button
-              type="button"
-              className="ficha ficha--pequena"
-              aria-current={ruta.tipo === 'recientes' ? 'true' : undefined}
-              onClick={() => navegar({ tipo: 'recientes' })}
-            >
+            <Atajo activo={ruta.tipo === 'recientes'} alIr={() => navegar({ tipo: 'recientes' })}>
               Recientes
-            </button>
+            </Atajo>
           )}
           {datosAlmacen.disponible && (
-            <button
-              type="button"
-              className="ficha ficha--pequena"
-              aria-current={ruta.tipo === 'favoritas' ? 'true' : undefined}
-              onClick={() => navegar({ tipo: 'favoritas' })}
-            >
+            <Atajo activo={ruta.tipo === 'favoritas'} alIr={() => navegar({ tipo: 'favoritas' })}>
               Favoritas{datosAlmacen.favoritas.length > 0 ? ` (${datosAlmacen.favoritas.length})` : ''}
-            </button>
+            </Atajo>
           )}
         </nav>
       </header>
@@ -217,6 +211,7 @@ export function Explorador({ ruta, indice, sorpresa, alConsumirSorpresa, alSorpr
                 lugares={indice.lugares}
                 lugarEnfocado={lugarEnfocado}
                 emisoras={visibles}
+                buscando={buscando}
                 alElegirLugar={(lugar) => navegar({ tipo: 'lugar', id: lugar.id })}
                 alPasarPorLugar={setHover}
               />
@@ -392,4 +387,34 @@ function construirContenido(
     case 'paises':
       return { ...vacio, titulo: 'Noticias del mundo' };
   }
+}
+
+/**
+ * Atajo de la cabecera. Funciona como interruptor: si ya estás dentro, el mismo botón te
+ * devuelve al inicio. Antes se quedaba encendido sin salida y desde las noticias no se veía
+ * cómo volver a la música.
+ *
+ * El relleno crece desde el punto por donde entra el puntero. Es CSS: el ratón solo apunta
+ * dónde empieza el círculo.
+ */
+function Atajo({ activo, alIr, children }: { activo: boolean; alIr: () => void; children: ReactNode }) {
+  return (
+    <button
+      type="button"
+      className="ficha ficha--pequena ficha--relleno"
+      aria-current={activo ? 'true' : undefined}
+      onPointerEnter={marcarOrigen}
+      onPointerDown={marcarOrigen}
+      onClick={() => (activo ? navegar({ tipo: 'inicio' }) : alIr())}
+    >
+      {children}
+      {activo && <span className="visualmente-oculto"> (pulsa otra vez para volver al inicio)</span>}
+    </button>
+  );
+}
+
+function marcarOrigen(evento: PointerEvent<HTMLElement>) {
+  const caja = evento.currentTarget.getBoundingClientRect();
+  evento.currentTarget.style.setProperty('--origen-x', `${evento.clientX - caja.left}px`);
+  evento.currentTarget.style.setProperty('--origen-y', `${evento.clientY - caja.top}px`);
 }
